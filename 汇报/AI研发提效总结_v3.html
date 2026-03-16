@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI赋能全链路研发 - 提效总结报告</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* ===========================================
+           VIEWPORT FITTING: MANDATORY BASE STYLES
+           =========================================== */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-height: 100%;
+            overflow: hidden;
+            padding: var(--slide-padding);
+        }
+
+        :root {
+            --title-size: clamp(1.5rem, 5vw, 4rem);
+            --h2-size: clamp(1.25rem, 3.5vw, 2.5rem);
+            --h3-size: clamp(1rem, 2.5vw, 1.75rem);
+            --body-size: clamp(0.75rem, 1.5vw, 1.125rem);
+            --small-size: clamp(0.65rem, 1vw, 0.875rem);
+            --slide-padding: clamp(1rem, 4vw, 4rem);
+            --content-gap: clamp(0.5rem, 2vw, 2rem);
+            --element-gap: clamp(0.25rem, 1vw, 1rem);
+        }
+
+        img {
+            max-width: 100%;
+            max-height: min(50vh, 400px);
+            object-fit: contain;
+        }
+
+        @media (max-height: 700px) {
+            :root {
+                --slide-padding: clamp(0.75rem, 3vw, 2rem);
+                --content-gap: clamp(0.4rem, 1.5vw, 1rem);
+                --title-size: clamp(1.25rem, 4.5vw, 2.5rem);
+                --h2-size: clamp(1rem, 3vw, 1.75rem);
+            }
+        }
+
+        @media (max-height: 600px) {
+            :root {
+                --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+                --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+                --title-size: clamp(1.1rem, 4vw, 2rem);
+                --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+            }
+            .nav-dots, .slide-number { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.2s !important;
+            }
+            html { scroll-behavior: auto; }
+        }
+
+        /* ===========================================
+           ELECTRIC STUDIO THEME
+           =========================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-white: #ffffff;
+            --accent-blue: #4361ee;
+            --accent-cyan: #00d9ff;
+            --text-dark: #0a0a0a;
+            --text-light: #ffffff;
+            --text-gray: #888888;
+        }
+
+        /* === SLIDE NUMBER === */
+        .slide-number {
+            position: absolute;
+            top: clamp(1.5rem, 3vw, 3rem);
+            left: clamp(1.5rem, 3vw, 3rem);
+            font-size: clamp(0.75rem, 1.2vw, 1rem);
+            font-weight: 700;
+            color: var(--text-gray);
+            z-index: 10;
+            letter-spacing: 0.1em;
+        }
+
+        /* === NAVIGATION DOTS === */
+        .nav-dots {
+            position: fixed;
+            right: clamp(1rem, 2vw, 2rem);
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(0.4rem, 0.8vw, 0.8rem);
+            z-index: 100;
+        }
+
+        .nav-dot {
+            width: clamp(6px, 0.8vw, 10px);
+            height: clamp(6px, 0.8vw, 10px);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: var(--accent-blue);
+            transform: scale(1.3);
+        }
+
+        .nav-dot:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* === TITLE SLIDE === */
+        .title-slide {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title-content {
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .title-main {
+            font-size: clamp(2rem, 6vw, 5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: clamp(1rem, 2vw, 2rem);
+            background: linear-gradient(135deg, #ffffff 0%, #4361ee 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .title-subtitle {
+            font-size: clamp(1rem, 2.5vw, 2rem);
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: clamp(0.5rem, 1vw, 1rem);
+        }
+
+        .title-meta {
+            font-size: clamp(0.75rem, 1.5vw, 1.125rem);
+            color: var(--text-gray);
+            margin-top: clamp(1rem, 2vw, 2rem);
+        }
+
+        .engine-badges {
+            display: flex;
+            gap: clamp(1rem, 2vw, 2rem);
+            justify-content: center;
+            margin-top: clamp(1.5rem, 3vw, 3rem);
+        }
+
+        .engine-badge {
+            padding: clamp(0.5rem, 1vw, 1rem) clamp(1rem, 2vw, 2rem);
+            background: rgba(67, 97, 238, 0.1);
+            border: 2px solid var(--accent-blue);
+            border-radius: clamp(0.5rem, 1vw, 1rem);
+            font-size: clamp(0.75rem, 1.2vw, 1rem);
+            font-weight: 700;
+            color: var(--accent-blue);
+            letter-spacing: 0.05em;
+        }
+
+        /* === SECTION SLIDE === */
+        .section-slide {
+            background: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .section-content {
+            text-align: center;
+        }
+
+        .section-number {
+            font-size: clamp(3rem, 10vw, 8rem);
+            font-weight: 800;
+            color: var(--accent-blue);
+            line-height: 1;
+            margin-bottom: clamp(1rem, 2vw, 2rem);
+            opacity: 0.3;
+        }
+
+        .section-title {
+            font-size: clamp(1.5rem, 4vw, 3.5rem);
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.2;
+        }
+
+        .section-subtitle {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            color: var(--text-gray);
+            margin-top: clamp(0.5rem, 1vw, 1rem);
+        }
+
+        /* === CONTENT SLIDE === */
+        .content-slide {
+            background: var(--bg-dark);
+        }
+
+        .content-header {
+            margin-bottom: clamp(1.5rem, 3vw, 3rem);
+        }
+
+        .content-title {
+            font-size: var(--h2-size);
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: clamp(0.5rem, 1vw, 1rem);
+        }
+
+        .content-subtitle {
+            font-size: var(--body-size);
+            color: var(--text-gray);
+        }
+
+        /* === PAIN POINTS GRID === */
+        .pain-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+            gap: clamp(1rem, 2vw, 2rem);
+            max-height: 60vh;
+        }
+
+        .pain-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: clamp(0.75rem, 1.5vw, 1.5rem);
+            padding: clamp(1rem, 2vw, 2rem);
+            transition: all 0.3s ease;
+        }
+
+        .pain-card:hover {
+            background: rgba(67, 97, 238, 0.05);
+            border-color: var(--accent-blue);
+            transform: translateY(-4px);
+        }
+
+        .pain-icon {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: clamp(0.5rem, 1vw, 1rem);
+        }
+
+        .pain-title {
+            font-size: clamp(1rem, 1.8vw, 1.5rem);
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: clamp(0.5rem, 1vw, 1rem);
+        }
+
+        .pain-desc {
+            font-size: var(--body-size);
+            color: var(--text-gray);
+            line-height: 1.6;
+        }
+
+        /* === DUAL ENGINE COMPARISON === */
+        .dual-engine {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+            gap: clamp(1.5rem, 3vw, 3rem);
+            max-height: 65vh;
+        }
+
+        .engine-panel {
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.1) 0%, rgba(0, 217, 255, 0.05) 100%);
+            border: 2px solid var(--accent-blue);
+            border-radius: clamp(1rem, 2vw, 2rem);
+            padding: clamp(1.5rem, 3vw, 3rem);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .engine-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+        }
+
+        .engine-name {
+            font-size: clamp(1.25rem, 2.5vw, 2rem);
+            font-weight: 800;
+            color: var(--accent-blue);
+            margin-bottom: clamp(1rem, 2vw, 2rem);
+            letter-spacing: 0.05em;
+        }
+
+        .engine-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(0.5rem, 1vw, 1rem);
+        }
+
+        .engine-features li {
+            font-size: var(--body-size);
+            color: #ffffff;
+            padding-left: clamp(1.5rem, 2vw, 2rem);
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .engine-features li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        /* === METRICS GRID === */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+            gap: clamp(1rem, 2vw, 2rem);
+            max-height: 60vh;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.15) 0%, rgba(0, 217, 255, 0.1) 100%);
+            border-radius: clamp(1rem, 2vw, 2rem);
+            padding: clamp(1.5rem, 3vw, 3rem);
+            text-align: center;
+            border: 1px solid rgba(67, 97, 238, 0.3);
+        }
+
+        .metric-value {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 800;
+            color: var(--accent-cyan);
+            line-height: 1;
+            margin-bottom: clamp(0.5rem, 1vw, 1rem);
+        }
+
+        .metric-label {
+            font-size: var(--body-size);
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        /* === WORKFLOW COMPARISON === */
+        .workflow-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(2rem, 4vw, 4rem);
+            max-height: 65vh;
+        }
+
+        .workflow-column h3 {
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            font-weight: 700;
+            margin-bottom: clamp(1rem, 2vw, 2rem);
+            padding-bottom: clamp(0.5rem, 1vw, 1rem);
+            border-bottom: 2px solid;
+        }
+
+        .workflow-column.before h3 {
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+
+        .workflow-column.after h3 {
+            color: #4361ee;
+            border-color: #4361ee;
+        }
+
+        .workflow-steps {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(0.75rem, 1.5vw, 1.5rem);
+        }
+
+        .workflow-steps li {
+            font-size: var(--body-size);
+            color: var(--text-gray);
+            padding-left: clamp(2rem, 3vw, 3rem);
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .workflow-steps li::before {
+            content: attr(data-step);
+            position: absolute;
+            left: 0;
+            width: clamp(1.5rem, 2.5vw, 2rem);
+            height: clamp(1.5rem, 2.5vw, 2rem);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(0.65rem, 1vw, 0.875rem);
+            font-weight: 700;
+        }
+
+        .workflow-column.before li::before {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border: 2px solid #ff6b6b;
+        }
+
+        .workflow-column.after li::before {
+            background: rgba(67, 97, 238, 0.2);
+            color: #4361ee;
+            border: 2px solid #4361ee;
+        }
+
+        @media (max-width: 768px) {
+            .workflow-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* === BULLET LIST === */
+        .bullet-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: clamp(0.75rem, 1.5vw, 1.5rem);
+            max-height: 60vh;
+        }
+
+        .bullet-list li {
+            font-size: var(--body-size);
+            color: #ffffff;
+            padding-left: clamp(2rem, 3vw, 3rem);
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .bullet-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5em;
+            width: clamp(0.5rem, 1vw, 0.75rem);
+            height: clamp(0.5rem, 1vw, 0.75rem);
+            background: var(--accent-cyan);
+            border-radius: 50%;
+        }
+
+        /* === ANIMATIONS === */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.8s ease forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reveal:nth-child(1) { animation-delay: 0.1s; }
+        .reveal:nth-child(2) { animation-delay: 0.2s; }
+        .reveal:nth-child(3) { animation-delay: 0.3s; }
+        .reveal:nth-child(4) { animation-delay: 0.4s; }
+        .reveal:nth-child(5) { animation-delay: 0.5s; }
+        .reveal:nth-child(6) { animation-delay: 0.6s; }
+
+        /* === HIGHLIGHT BOX === */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.2) 0%, rgba(0, 217, 255, 0.1) 100%);
+            border-left: 4px solid var(--accent-blue);
+            padding: clamp(1rem, 2vw, 2rem);
+            border-radius: clamp(0.5rem, 1vw, 1rem);
+            margin-top: clamp(1rem, 2vw, 2rem);
+        }
+
+        .highlight-box p {
+            font-size: var(--body-size);
+            color: #ffffff;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Dots -->
+    <div class="nav-dots">
+        <div class="nav-dot active" onclick="scrollToSlide(0)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(1)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(2)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(3)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(4)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(5)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(6)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(7)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(8)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(9)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(10)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(11)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(12)"></div>
+        <div class="nav-dot" onclick="scrollToSlide(13)"></div>
+    </div>
+
+    <!-- Slide 1: Title -->
+    <section class="slide title-slide">
+        <div class="title-content">
+            <div class="title-main reveal">AI 赋能全链路研发</div>
+            <div class="title-subtitle reveal">AI Coding 研发提效总结</div>
+            <div class="title-meta reveal">基于 Cursor IDE + Claude Code 双引擎驱动</div>
+            <div class="engine-badges reveal">
+                <div class="engine-badge">CURSOR IDE</div>
+                <div class="engine-badge">CLAUDE CODE</div>
+            </div>
+            <div class="title-meta reveal" style="margin-top: clamp(2rem, 4vw, 4rem);">
+                移动储能机器人运营中心 · 全链路独立系统研发
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 2: Section 01 -->
+    <section class="slide section-slide">
+        <div class="slide-number">01</div>
+        <div class="section-content">
+            <div class="section-number reveal">01</div>
+            <div class="section-title reveal">传统开发的痛点</div>
+            <div class="section-subtitle reveal">为什么需要 AI Coding？</div>
+        </div>
+    </section>
+
+    <!-- Slide 3: Pain Points -->
+    <section class="slide content-slide">
+        <div class="slide-number">02</div>
+        <div class="slide-content">
+            <div class="content-header">
+                <h2 class="content-title reveal">研发效率瓶颈分析</h2>
+            </div>
+            <div class="pain-grid">
+                <div class="pain-card reveal">
+                    <div class="pain-icon">⏱️</div>
+                    <div class="pain-title">周期长</div>
+                    <div class="pain-desc">需求理解、架构设计、编码实现、联调测试，每个环节都需要大量人工时间。独立系统研发通常需要 2-4 周。</div>
+                </div>
+                <div class="pain-card reveal">
+                    <div class="pain-icon">🔄</div>
+                    <div class="pain-title">重复高</div>
+                    <div class="pain-desc">CRUD 代码、配置文件、DTO 映射、API 文档等重复性工作占比大，工程师价值被低效消耗。</div>
+                </div>
+                <div class="pain-card reveal">
+                    <div class="pain-icon">💬</div>
+                    <div class="pain-title">沟通成本</div>
+                    <div class="pain-desc">需求文档 → 设计稿 → 开发 → 联调，多角色交接产生信息丢失和理解偏差。</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 4: Section 02 -->
+    <section class="slide section-slide">
+        <div class="slide-number">03</div>
+        <div class="section-content">
+            <div class="section-number reveal">02</div>
+            <div class="section-title reveal">AI Coding 双引擎</div>
+            <div class="section-subtitle reveal">Cursor + Claude Code 协同架构</div>
+        </div>
+    </section>
+
+    <!-- Slide 5: Dual Engine Comparison -->
+    <section class="slide content-slide">
+        <div class="slide-number">04</div>
+        <div class="slide-content">
+            <div class="content-header">
+                <h2 class="content-title reveal">双引擎能力矩阵</h2>
+            </div>
+            <div class="dual-engine">
+                <div class="engine-panel reveal">
+                    <div class="engine-name">CURSOR IDE</div>
+                    <ul class="engine-features">
+                        <li>智能代码补全与生成</li>
+                        <li>上下文感知编程</li>
+                        <li>多文件协同编辑</li>
+                        <li>实时代码审查</li>
+                        <li>自然语言交互</li>
+                    </ul>
+                </div>
+                <div class="engine-panel reveal">
+                    <div class="engine-name">CLAUDE CODE</div>
+                    <ul class="engine-features">
+                        <li>架构设计与规划</li>
+                        <li>复杂问题分析</li>
+                        <li>全局代码重构</li>
+                        <li>技术方案评估</li>
+                        <li>文档自动生成</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 5.5: Architecture Diagram -->
+    <section class="slide content-slide">
+        <div class="slide-number">05</div>
+        <div class="slide-content">
+            <div class="content-header">
+                <h2 class="content-title reveal">AI 全链路开发架构</h2>
+            </div>
+            <div style="display: flex; justify-content: center; align-items: center; flex: 1;">
+                <img src="ai-flow-architecture.png" alt="AI全链路开发架构图" class="reveal" style="max-width: 90%; max-height: min(60vh, 500px); object-fit: contain; border-radius: clamp(0.5rem, 1vw, 1rem); box-shadow: 0 8px 32px rgba(67, 97, 238, 0.3);">
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 6: Section 03 -->
+    <section class="slide section-slide">
+        <div class="slide-number">06</div>
+        <div class="section-content">
+            <div class="section-number reveal">03</div>
+            <div class="section-title reveal">实战效果验证</div>
+            <div class="section-subtitle reveal">真实项目数据对比</div>
+        </div>
+    </section>
+
+    <!-- Slide 7: Metrics -->
+    <section class="slide content-slide">
+        <div class="slide-number">07</div>
+        <div class="slide-content">
+            <div class="content-header">
+                <h2 class="content-title reveal">核心提效指标</h2>
+            </div>
+            <div class="metrics-grid">
+                <div class="metric-card reveal">
+                    <div class="metric-value">70%</div>
+                    <div class="metric-label">开发时间缩短</div>
+                </div>
+                <div class="metric-card reveal">
+                    <div class="metric-value">3天</div>
+                    <div class="metric-label">独立系统交付</div>
+                </div>
+                <div class="metric-card reveal">
+                    <div class="metric-value">85%</div>
+                    <div class="metric-label">代码复用率</div>
+                </div>
+                <div class="metric-card reveal">
+                    <div class="metric-value">90%</div>
+                    <div class="metric-label">首次提测通过率</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 7.5: Development Screenshots -->
+    <section class="slide content-slide">
+        <div class="slide-number">08</div>
+        <div class="slide-content">
+            <div class="content-header">
+                <h2 class="content-title reveal">开发过程实录</h2>
+                <p class="content-subtitle reveal">Cursor IDE + Claude Code Terminal 协同工作</p>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 2vw, 2rem); max-height: 55vh;">
+                <img src="slide1_screenshot.png" alt="Cursor IDE 开发界面" class="reveal" style="width: 100%; height: 100%; object-fit: cover; border-radius: clamp(0.5rem, 1vw, 1rem); border: 2px solid rgba(67, 97, 238, 0.3);">
+                <img src="slide4_screenshot.png" alt="Claude Code Terminal" class="reveal" style="width: 100%; height: 100%; object-fit: cover; border-radius: clamp(0.5rem, 1vw, 1rem); border: 2px solid rgba(0, 217, 255, 0.3);">
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 8: Workflow Comparison -->
+    <section class="slide content-slide">
+        <div class="slide-number">09</div>
+        <div class="slide-content">
+            <div class="content-header">
+                <h2 class="content-title reveal">研发流程对比</h2>
+            </div>
+            <div class="workflow-comparison">
+                <div class="workflow-column before">
+                    <h3 class="reveal">传统模式（2-4周）</h3>
+                    <ul class="workflow-steps">
+                        <li data-step="1" class="reveal">需求分析与评审</li>
+                        <li data-step="2" class="reveal">技术方案设计</li>
+                        <li data-step="3" class="reveal">数据库设计</li>
+                        <li data-step="4" class="reveal">接口设计与文档</li>
+                        <li data-step="5" class="reveal">编码实现</li>
+                        <li data-step="6" class="reveal">单元测试</li>
+                    </ul>
+                </div>
+                <div class="workflow-column after">
+                    <h3 class="reveal">AI 模式（3天）</h3>
+                    <ul class="workflow-steps">
+                        <li data-step="1" class="reveal">AI 辅助需求理解</li>
+                        <li data-step="2" class="reveal">AI 生成架构方案</li>
+                        <li data-step="3" class="reveal">AI 自动生成代码</li>
+                        <li data-step="4" class="reveal">人工审查优化</li>
+                        <li data-step="5" class="reveal">AI 辅助测试</li>
+                        <li data-step="6" class="reveal">快速迭代上线</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 9: Section 04 -->
+    <section class="slide section-slide">
+        <div class="slide-number">10</div>
+        <div class="section-content">
+            <div class="section-number reveal">04</div>
+            <div class="section-title reveal">典型应用场景</div>
+            <div class="section-subtitle reveal">AI Coding 最佳实践</div>
+        </div>
+    </section>
+
+    <!-- Slide 10: Use Cases -->
+    <section class="slide content-slide">
+        <div class="slide-number">11</div>
+        <div class="slide-content">
+            <div class="content-header">
+                <h2 class="content-title reveal">高价值应用场景</h2>
+            </div>
+            <ul class="bullet-list">
+                <li class="reveal"><strong>快速原型开发：</strong>从需求到可演示原型，3小时内完成，快速验证产品方向</li>
+                <li class="reveal"><strong>CRUD 系统生成：</strong>自动生成标准化的增删改查模块，包含前后端完整代码</li>
+                <li class="reveal"><strong>API 接口开发：</strong>根据接口文档自动生成 Controller、Service、DTO 等完整代码</li>
+                <li class="reveal"><strong>数据库迁移：</strong>AI 辅助设计表结构、生成迁移脚本、优化索引策略</li>
+                <li class="reveal"><strong>代码重构优化：</strong>识别代码坏味道，提供重构建议并自动执行</li>
+                <li class="reveal"><strong>技术文档生成：</strong>自动生成 API 文档、架构文档、部署文档</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Slide 11: Section 05 -->
+    <section class="slide section-slide">
+        <div class="slide-number">12</div>
+        <div class="section-content">
+            <div class="section-number reveal">05</div>
+            <div class="section-title reveal">未来展望</div>
+            <div class="section-subtitle reveal">持续演进的 AI 研发体系</div>
+        </div>
+    </section>
+
+    <!-- Slide 12: Future -->
+    <section class="slide content-slide">
+        <div class="slide-number">13</div>
+        <div class="slide-content">
+            <div class="content-header">
+                <h2 class="content-title reveal">下一步规划</h2>
+            </div>
+            <ul class="bullet-list">
+                <li class="reveal"><strong>团队能力建设：</strong>推广 AI Coding 最佳实践，建立团队知识库</li>
+                <li class="reveal"><strong>工具链优化：</strong>集成更多 AI 工具，构建完整的智能研发工作流</li>
+                <li class="reveal"><strong>质量保障体系：</strong>AI 辅助代码审查、安全扫描、性能测试</li>
+                <li class="reveal"><strong>持续学习迭代：</strong>积累项目经验，优化 AI 提示词工程</li>
+            </ul>
+            <div class="highlight-box reveal">
+                <p><strong>核心理念：</strong>AI 不是替代工程师，而是让工程师从重复劳动中解放，专注于更有价值的创造性工作。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 13: Thank You -->
+    <section class="slide title-slide">
+        <div class="slide-number">14</div>
+        <div class="title-content">
+            <div class="title-main reveal">Thank You</div>
+            <div class="title-subtitle reveal">AI 赋能，效率倍增</div>
+            <div class="title-meta reveal" style="margin-top: clamp(2rem, 4vw, 4rem);">
+                移动储能机器人运营中心 · 全链路独立系统研发
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // === NAVIGATION ===
+        function scrollToSlide(index) {
+            const slides = document.querySelectorAll('.slide');
+            slides[index].scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Update active dot on scroll
+        let isScrolling = false;
+        window.addEventListener('scroll', () => {
+            if (isScrolling) return;
+            isScrolling = true;
+
+            setTimeout(() => {
+                const slides = document.querySelectorAll('.slide');
+                const dots = document.querySelectorAll('.nav-dot');
+                const scrollPosition = window.scrollY + window.innerHeight / 2;
+
+                slides.forEach((slide, index) => {
+                    const slideTop = slide.offsetTop;
+                    const slideBottom = slideTop + slide.offsetHeight;
+
+                    if (scrollPosition >= slideTop && scrollPosition < slideBottom) {
+                        dots.forEach(dot => dot.classList.remove('active'));
+                        dots[index].classList.add('active');
+                    }
+                });
+
+                isScrolling = false;
+            }, 100);
+        });
+
+        // === KEYBOARD NAVIGATION ===
+        document.addEventListener('keydown', (e) => {
+            const slides = document.querySelectorAll('.slide');
+            const currentIndex = Array.from(slides).findIndex(slide => {
+                const rect = slide.getBoundingClientRect();
+                return rect.top >= -100 && rect.top <= 100;
+            });
+
+            if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                if (currentIndex < slides.length - 1) {
+                    scrollToSlide(currentIndex + 1);
+                }
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                if (currentIndex > 0) {
+                    scrollToSlide(currentIndex - 1);
+                }
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                scrollToSlide(0);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                scrollToSlide(slides.length - 1);
+            }
+        });
+
+        // === REVEAL ANIMATIONS ON SCROLL ===
+        const observerOptions = {
+            threshold: 0.2,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            el.style.animationPlayState = 'paused';
+            observer.observe(el);
+        });
+
+        // === TOUCH SWIPE SUPPORT ===
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartY = e.changedTouches[0].screenY;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const slides = document.querySelectorAll('.slide');
+            const currentIndex = Array.from(slides).findIndex(slide => {
+                const rect = slide.getBoundingClientRect();
+                return rect.top >= -100 && rect.top <= 100;
+            });
+
+            if (touchStartY - touchEndY > swipeThreshold && currentIndex < slides.length - 1) {
+                scrollToSlide(currentIndex + 1);
+            } else if (touchEndY - touchStartY > swipeThreshold && currentIndex > 0) {
+                scrollToSlide(currentIndex - 1);
+            }
+        }
+
+        // === PREVENT HORIZONTAL SCROLL ===
+        document.addEventListener('wheel', (e) => {
+            if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>

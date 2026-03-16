@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  width:1600px;height:900px;overflow:hidden;
+  background:#050f1e;
+  font-family:'Microsoft YaHei','Noto Sans SC',sans-serif;
+  color:#e2e8f0;
+  padding:28px 32px 24px;
+  position:relative;
+}
+/* grid bg */
+body::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(26,58,92,.18) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(26,58,92,.18) 1px,transparent 1px);
+  background-size:50px 50px;pointer-events:none;
+}
+:root{
+  --cyan:#00d4ff;--blue:#3b82f6;--purple:#a855f7;
+  --green:#10b981;--orange:#f97316;
+  --card:#0b1f38;--bdr:#1a3a5c;--sub:#94a3b8;--dim:#475569;
+}
+
+/* ── Title ── */
+.title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;position:relative;z-index:1}
+.title-row h1{font-size:22px;font-weight:900;background:linear-gradient(135deg,#fff,var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ai-chip{font-size:11px;font-weight:600;color:var(--cyan);background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.35);padding:4px 14px;border-radius:20px}
+
+/* ── Top accent ── */
+.top-bar{height:3px;background:linear-gradient(90deg,var(--cyan),var(--blue),var(--purple),transparent);border-radius:2px;margin-bottom:20px;position:relative;z-index:1}
+
+/* ── Flow timeline ── */
+.flow{display:flex;align-items:stretch;gap:0;margin-bottom:16px;position:relative;z-index:1}
+.step{
+  flex:1;display:flex;flex-direction:column;align-items:center;position:relative;
+}
+.step-box{
+  width:100%;padding:8px 6px;background:var(--card);
+  border-top:3px solid;text-align:center;
+  cursor:default;
+}
+.step-num{font-size:10px;font-weight:700;color:#fff;opacity:.5;margin-bottom:2px}
+.step-name{font-size:12px;font-weight:700;line-height:1.3}
+.step-sub{font-size:10px;color:var(--sub);margin-top:2px;line-height:1.3}
+.step-arrow{
+  position:absolute;right:-10px;top:50%;transform:translateY(-50%);
+  font-size:14px;color:var(--dim);z-index:2;
+}
+.step:last-child .step-arrow{display:none}
+.ai-step .step-box{background:rgba(0,212,255,.1);border-color:var(--cyan)!important}
+.ai-step .step-name{color:var(--cyan)}
+
+/* ── Main 3-column grid ── */
+.main-grid{display:grid;grid-template-columns:1fr 1fr 0.85fr;gap:14px;flex:1;position:relative;z-index:1}
+
+/* ── Panel ── */
+.panel{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.panel.ai{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,212,255,.1)}
+.panel-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── Sub panel ── */
+.sub{background:#020c18;border:1px solid var(--bdr);border-radius:7px;padding:10px}
+.sub-title{font-size:11px;font-weight:700;margin-bottom:7px}
+.row{display:flex;align-items:flex-start;gap:6px;font-size:11px;color:var(--sub);padding:2px 0}
+.row::before{content:'▸';color:var(--cyan);flex-shrink:0;margin-top:1px}
+
+/* ── Chips ── */
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:10px;padding:2px 8px;border-radius:12px;border:1px solid;font-weight:600}
+.chip-c{color:var(--cyan);border-color:rgba(0,212,255,.4);background:rgba(0,212,255,.08)}
+.chip-b{color:var(--blue);border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.08)}
+.chip-p{color:var(--purple);border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.08)}
+.chip-g{color:var(--green);border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08)}
+.chip-o{color:var(--orange);border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.08)}
+
+/* ── API row ── */
+.api{display:flex;align-items:center;gap:6px;padding:3px 6px;background:#020c18;border-radius:4px;border:1px solid var(--bdr);font-size:10px}
+.method{background:var(--blue);color:#fff;padding:1px 5px;border-radius:3px;font-weight:700;flex-shrink:0;font-size:9px}
+.path{font-family:monospace;color:var(--cyan);font-size:10px}
+.desc{margin-left:auto;color:var(--dim)}
+
+/* ── Field ── */
+.field{display:flex;gap:6px;font-size:10px;padding:2px 0;border-bottom:1px solid #0d1f30}
+.field:last-child{border:none}
+.fn{font-family:monospace;color:var(--cyan);width:110px;flex-shrink:0}
+.ft{color:var(--purple);width:50px;flex-shrink:0;font-family:monospace}
+.fd{color:var(--sub)}
+
+/* ── Grid 2 ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+</style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+
+<div class="title-row">
+  <div>
+    <h1>AI 赋能全链路研发架构图 — 移动储能机器人运营中心</h1>
+    <div style="font-size:11px;color:var(--sub);margin-top:3px">从需求输入到云平台对接的完整独立系统研发过程</div>
+  </div>
+  <span class="ai-chip">★ Cursor + Claude 大模型驱动</span>
+</div>
+
+<!-- ── Flow Timeline ── -->
+<div class="flow">
+  <div class="step ai-step">
+    <div class="step-box" style="border-color:var(--sub)">
+      <div class="step-num">01</div>
+      <div class="step-name" style="color:var(--sub)">需求输入</div>
+      <div class="step-sub">文档 + 原型截图</div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step ai-step">
+    <div class="step-box">
+      <div class="step-num">02</div>
+      <div class="step-name">AI 智能分析</div>
+      <div class="step-sub">需求理解 · UI解读</div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step ai-step">
+    <div class="step-box">
+      <div class="step-num">03</div>
+      <div class="step-name">AI 架构生成</div>
+      <div class="step-sub">工程骨架 + 配置</div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step ai-step">
+    <div class="step-box">
+      <div class="step-num">04</div>
+      <div class="step-name">AI 全栈研发</div>
+      <div class="step-sub">前端 + 后端编码</div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step">
+    <div class="step-box" style="border-color:var(--green)">
+      <div class="step-num">05</div>
+      <div class="step-name" style="color:var(--green)">前后端联调</div>
+      <div class="step-sub">Result&lt;T&gt; · 参数联动</div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step ai-step">
+    <div class="step-box">
+      <div class="step-num">06</div>
+      <div class="step-name">AI 接口设计</div>
+      <div class="step-sub">元数据 → 接口文档</div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step">
+    <div class="step-box" style="border-color:var(--orange)">
+      <div class="step-num">07</div>
+      <div class="step-name" style="color:var(--orange)">云平台对接</div>
+      <div class="step-sub">传统开发 + 联调</div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step">
+    <div class="step-box" style="border-color:var(--green);background:rgba(16,185,129,.1)">
+      <div class="step-num">08</div>
+      <div class="step-name" style="color:var(--green)">系统交付</div>
+      <div class="step-sub">完整独立系统</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main 3-column content ── -->
+<div class="main-grid">
+
+  <!-- COL 1: Frontend + Backend -->
+  <div class="panel ai">
+    <div class="panel-title"><div class="dot" style="background:var(--cyan)"></div><span style="color:var(--cyan)">前端系统</span><span style="font-size:10px;color:var(--sub);font-weight:400">React 18 + Vite + ECharts + Tailwind</span></div>
+    <div class="sub">
+      <div class="sub-title" style="color:var(--cyan)">Dashboard 组件</div>
+      <div class="g2" style="gap:4px">
+        <div class="row" style="padding:1px 0">StatCard × 3（总订单/kWh/机器人）</div>
+        <div class="row" style="padding:1px 0">完单率环形图</div>
+        <div class="row" style="padding:1px 0">结束原因饼图</div>
+        <div class="row" style="padding:1px 0">24h 热力图（双层渲染）</div>
+        <div class="row" style="padding:1px 0">流程耗时堆叠条形</div>
+        <div class="row" style="padding:1px 0">取消分析饼图</div>
+        <div class="row" style="padding:1px 0">用户频次柱状图</div>
+      </div>
+    </div>
+    <div class="sub">
+      <div class="sub-title" style="color:var(--purple)">服务 & 状态层</div>
+      <div class="row">api.js — Axios + buildParams 构造器</div>
+      <div class="row">响应拦截器 — 统一解包 Result&lt;T&gt;</div>
+      <div class="row">useState(siteId, days) 筛选状态</div>
+      <div class="row">useEffect 依赖监听 → 自动联动刷新</div>
+    </div>
+  </div>
+
+  <!-- COL 2: Backend -->
+  <div class="panel ai">
+    <div class="panel-title"><div class="dot" style="background:var(--blue)"></div><span style="color:var(--blue)">后端系统</span><span style="font-size:10px;color:var(--sub);font-weight:400">Spring Boot 3 · Java 17 · Maven</span></div>
+    <div class="sub">
+      <div class="sub-title" style="color:var(--cyan)">Controller 层 — 纯路由分发</div>
+      <div class="api"><span class="method">GET</span><span class="path">/dashboard/stats | completion-rate | end-reasons</span></div>
+      <div class="api" style="margin-top:3px"><span class="method">GET</span><span class="path">/dashboard/heatmap | process-time | cancel-analysis | user-frequency</span></div>
+      <div style="margin-top:5px;font-size:10px;color:var(--sub)">公共参数: <span style="color:var(--cyan);font-family:monospace">?siteId=S001&days=7</span>&nbsp;&nbsp;返回: <span style="color:var(--green);font-family:monospace">Result&lt;T&gt;</span></div>
+    </div>
+    <div class="sub">
+      <div class="sub-title" style="color:var(--blue)">Service 层 — 业务聚合</div>
+      <div class="row">filterOrders(siteId, days) 统一入口</div>
+      <div class="row">热力图归一化 / 高斯分布聚合</div>
+    </div>
+    <div class="sub">
+      <div class="sub-title" style="color:var(--purple)">CloudApiClient 抽象层</div>
+      <div class="g2" style="gap:6px">
+        <div style="padding:6px;background:#020c18;border:1px solid rgba(168,85,247,.3);border-radius:5px;font-size:10px">
+          <div style="color:var(--purple);font-weight:600">MockCloudApiClient</div>
+          <div style="color:var(--sub);margin-top:2px">3站点×30天 ~16,200条<br/>双高斯仿真数据</div>
+        </div>
+        <div style="padding:6px;background:#020c18;border:1px solid rgba(59,130,246,.3);border-radius:5px;font-size:10px">
+          <div style="color:var(--blue);font-weight:600">CloudApiClientImpl</div>
+          <div style="color:var(--sub);margin-top:2px">RestTemplate HTTP<br/>cloud.api.mock=false</div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:6px 10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:6px;font-size:10px">
+      <span style="color:var(--green);font-weight:600">Result&lt;T&gt;</span>
+      <span style="color:var(--sub);margin-left:6px">code · success · msg · data&lt;T&gt; · timestamp</span>
+      <span style="margin-left:6px;color:var(--dim)">+ GlobalExceptionHandler</span>
+    </div>
+  </div>
+
+  <!-- COL 3: Metadata + API Doc + Cloud -->
+  <div class="col" style="display:flex;flex-direction:column;gap:10px">
+
+    <div class="panel ai" style="flex:1">
+      <div class="panel-title"><div class="dot" style="background:var(--cyan)"></div><span style="color:var(--cyan)">AI 元数据提取</span></div>
+      <div class="sub" style="flex:1">
+        <div class="sub-title" style="color:var(--purple)">OrderRecord</div>
+        <div class="field"><span class="fn">orderId/siteId</span><span class="ft">String</span><span class="fd">订单ID / 站点</span></div>
+        <div class="field"><span class="fn">daysAgo/dayOfWeek</span><span class="ft">int</span><span class="fd">时间维度字段</span></div>
+        <div class="field"><span class="fn">endReason</span><span class="ft">String</span><span class="fd">NORMAL/USER_CANCEL…</span></div>
+        <div class="field"><span class="fn">actualKwh</span><span class="ft">double</span><span class="fd">实际充电量</span></div>
+        <div class="field"><span class="fn">userId</span><span class="ft">String</span><span class="fd">用户ID（忠诚度）</span></div>
+        <div class="field"><span class="fn">xxxMinutes</span><span class="ft">int</span><span class="fd">各阶段耗时</span></div>
+      </div>
+    </div>
+
+    <div class="panel" style="border-color:var(--orange)">
+      <div class="panel-title"><div class="dot" style="background:var(--orange)"></div><span style="color:var(--orange)">云平台接口文档（AI 输出）</span></div>
+      <div class="api"><span class="method">GET</span><span class="path">/api/orders</span><span class="desc">订单流水</span></div>
+      <div class="api" style="margin-top:3px"><span class="method">GET</span><span class="path">/api/robots</span><span class="desc">机器人状态</span></div>
+      <div class="api" style="margin-top:3px"><span class="method">GET</span><span class="path">/api/sites</span><span class="desc">站点列表</span></div>
+      <div style="display:flex;gap:6px;margin-top:5px">
+        <div style="flex:1;padding:5px 8px;background:#020c18;border-radius:5px;font-size:10px;border:1px solid rgba(249,115,22,.2)">
+          <div style="color:var(--orange);font-weight:600;margin-bottom:2px">订单管理系统</div>
+          <div style="color:var(--dim)">实现 /api/orders</div>
+        </div>
+        <div style="flex:1;padding:5px 8px;background:#020c18;border-radius:5px;font-size:10px;border:1px solid rgba(59,130,246,.2)">
+          <div style="color:var(--blue);font-weight:600;margin-bottom:2px">机器人调度</div>
+          <div style="color:var(--dim)">实现 /api/robots</div>
+        </div>
+        <div style="flex:1;padding:5px 8px;background:#020c18;border-radius:5px;font-size:10px;border:1px solid rgba(168,85,247,.2)">
+          <div style="color:var(--purple);font-weight:600;margin-bottom:2px">站点管理</div>
+          <div style="color:var(--dim)">实现 /api/sites</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- main-grid -->
+
+</body>
+</html>

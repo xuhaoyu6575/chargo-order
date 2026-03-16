@@ -1,0 +1,76 @@
+<!DOCTYPE html><html><head><style>
+html { background: #020617; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  font-family: Arial, sans-serif; color: #f8fafc;
+  display: flex; flex-direction: column;
+  background: #020617;
+}
+.accent { position: absolute; top: 0; left: 0; width: 720pt; height: 3pt; background: #0ea5e9; }
+.content { flex: 1; display: flex; flex-direction: column; padding: 32pt 40pt 24pt 40pt; }
+.content-center { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 32pt 40pt 24pt 40pt; text-align: center; }
+h1 { font-size: 32pt; font-weight: 800; color: #0ea5e9; margin: 0 0 8pt 0; font-family: Impact, Arial, sans-serif; letter-spacing: 1px; }
+h2 { font-size: 22pt; font-weight: 700; color: #0ea5e9; margin: 0 0 6pt 0; }
+h3 { font-size: 14pt; font-weight: 700; margin: 0 0 4pt 0; }
+h4 { font-size: 12pt; font-weight: 700; margin: 0 0 3pt 0; }
+p { font-size: 11pt; color: #cbd5e1; margin: 0 0 4pt 0; line-height: 1.5; }
+ul { margin: 0; padding-left: 16pt; }
+li { font-size: 10pt; color: #cbd5e1; margin-bottom: 3pt; line-height: 1.4; }
+.row { display: flex; gap: 12pt; }
+.col { flex: 1; display: flex; flex-direction: column; }
+.card { background: #0f172a; border: 1px solid #1e293b; padding: 12pt; border-left: 3pt solid #0ea5e9; position: relative; }
+.card-glow { background: #0f172a; border: 1px solid #0ea5e9; padding: 12pt; position: relative; box-shadow: inset 0 0 10pt rgba(14,165,233,0.1); }
+.card::before, .card-glow::before { content: ""; position: absolute; top: -1px; left: -1px; width: 6pt; height: 6pt; border-top: 2px solid #0ea5e9; border-left: 2px solid #0ea5e9; }
+.card::after, .card-glow::after { content: ""; position: absolute; bottom: -1px; right: -1px; width: 6pt; height: 6pt; border-bottom: 2px solid #0ea5e9; border-right: 2px solid #0ea5e9; }
+.sub-box { background: #000000; border: 1px solid #1e293b; padding: 8pt; margin-top: 4pt; border-left: 2px solid #8b5cf6; }
+.badge { display: inline-block; font-size: 8pt; font-weight: 700; padding: 2pt 8pt; border-radius: 0; text-transform: uppercase; letter-spacing: 1px; }
+.badge-cyan { color: #0ea5e9; }
+.badge-orange { color: #f59e0b; }
+.badge-purple { color: #8b5cf6; }
+.badge-bg-cyan { background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.7); padding: 2pt 8pt; display: inline-block; }
+.badge-bg-orange { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.7); padding: 2pt 8pt; display: inline-block; }
+.badge-bg-purple { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.7); padding: 2pt 8pt; display: inline-block; }
+.tag-wrap { display: inline-block; padding: 1pt 6pt; border-radius: 0; border: 1px solid currentColor; margin-right: 4pt; }
+.tag { font-size: 8pt; font-weight: 600; text-transform: uppercase; font-family: "Courier New", Courier, monospace;}
+.section-num { position: absolute; top: 12pt; right: 40pt; font-size: 56pt; font-weight: 800; color: rgba(14,165,233,0.06); font-family: Impact, Arial, sans-serif; }
+.stat-num { font-size: 32pt; font-weight: 800; font-family: Impact, Arial, sans-serif; text-shadow: 0 0 10pt currentColor; }
+.text-cyan { color: #0ea5e9; } .text-blue { color: #3b82f6; } .text-purple { color: #8b5cf6; }
+.text-green { color: #10b981; } .text-orange { color: #f59e0b; } .text-red { color: #ef4444; }
+.text-dim { color: #64748b; } .text-white { color: #ffffff; }
+.small { font-size: 9pt; } .tiny { font-size: 8pt; }
+</style></head><body>
+<div class="accent"></div>
+<div class="content">
+    <p class="section-num">08</p>
+    <div style="display:flex;align-items:center;gap:8pt;margin-bottom:4pt">
+      <h2 style="margin:0">AI 代码审查 & 安全加固</h2>
+      <div class="badge-bg-cyan"><p class="badge badge-cyan">Cursor</p></div>
+    </div>
+    <p style="margin-bottom:8pt">全量代码扫描，发现 <span style="color:#ef4444;font-weight:bold">10 项问题</span>（6 P1 高优 + 4 P2 中优），全部自动修复</p>
+    <div class="row" style="flex:1">
+      <div class="card" style="flex:1;border-color:#ef4444;display:flex;flex-direction:column">
+        <h4 class="text-red">P1 高优修复（6 项）</h4>
+        <ul style="margin-top:4pt">
+          <li><span style="font-weight:bold">GlobalExceptionHandler</span> — 阻止异常信息泄露</li>
+          <li><span style="font-weight:bold">getHeatmap</span> — 数组越界防护</li>
+          <li><span style="font-weight:bold">getUserFrequency</span> — null userId 过滤</li>
+          <li><span style="font-weight:bold">getEndReasons</span> — null endReason 过滤</li>
+          <li><span style="font-weight:bold">RestTemplate</span> — 超时配置 5s/30s</li>
+          <li><span style="font-weight:bold">DashboardController</span> — days 参数校验 1~365</li>
+        </ul>
+      </div>
+      <div class="card" style="flex:1;border-color:#f59e0b;display:flex;flex-direction:column">
+        <h4 class="text-orange">P2 中优修复（4 项）</h4>
+        <ul style="margin-top:4pt">
+          <li><span style="font-weight:bold">异常处理器顺序</span> — IllegalArgument 优先</li>
+          <li><span style="font-weight:bold">CloudApiClient.unwrap</span> — null data 处理</li>
+          <li><span style="font-weight:bold">baseUrl 末尾斜杠</span> — trim 防止双斜杠</li>
+          <li><span style="font-weight:bold">CORS 配置</span> — 改为配置文件读取</li>
+        </ul>
+        <div style="padding:6pt;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:4pt;margin-top:auto;text-align:center">
+          <p class="small text-green" style="font-weight:600">✅ 所有修复已验证通过，零回归</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body></html>

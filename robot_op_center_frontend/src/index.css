@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.pcb-bg {
+  background-color: #06162d;
+  background-image: url('/circuit-bg.svg');
+  background-repeat: repeat;
+  background-size: 340px 340px;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #06162d;
+}
+::-webkit-scrollbar-thumb {
+  background: #164e63;
+  border-radius: 3px;
+}

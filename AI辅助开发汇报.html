@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Coding 赋能开发 | 移动储能机器人运营中心</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --cyan:#00d4ff;--blue:#3b82f6;--purple:#a855f7;--green:#10b981;
+    --orange:#f97316;--bg:#050f1e;--card:#0b1f38;--border:#1a3a5c;
+  }
+  body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:#e2e8f0;overflow:hidden;height:100vh;}
+
+  /* ── 幻灯片容器 ── */
+  .slides{width:100%;height:100vh;position:relative;}
+  .slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    padding:56px 80px 48px;opacity:0;pointer-events:none;
+    transition:opacity .5s ease,transform .5s ease;transform:translateX(60px);
+  }
+  .slide.active{opacity:1;pointer-events:all;transform:translateX(0);}
+  .slide.prev{opacity:0;transform:translateX(-60px);}
+
+  /* ── 网格背景 ── */
+  body::before{
+    content:'';position:fixed;inset:0;
+    background-image:linear-gradient(var(--border) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--border) 1px,transparent 1px);
+    background-size:60px 60px;opacity:.25;pointer-events:none;
+  }
+
+  /* ── 顶部装饰线 ── */
+  .slide::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,transparent,var(--cyan),var(--blue),var(--purple),transparent);
+  }
+
+  /* ── 标题幻灯片 ── */
+  .slide-title{justify-content:center;align-items:center;text-align:center;}
+  .slide-title .logo{font-size:13px;letter-spacing:6px;color:var(--cyan);margin-bottom:32px;text-transform:uppercase;}
+  .slide-title h1{
+    font-size:52px;font-weight:900;line-height:1.2;margin-bottom:20px;
+    background:linear-gradient(135deg,#fff 0%,var(--cyan) 50%,var(--blue) 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .slide-title .sub{font-size:22px;color:#94a3b8;margin-bottom:48px;font-weight:300;}
+  .slide-title .meta{display:flex;gap:40px;justify-content:center;}
+  .slide-title .meta span{
+    font-size:13px;color:#64748b;padding:8px 24px;
+    border:1px solid var(--border);border-radius:20px;
+  }
+  .slide-title .meta span b{color:var(--cyan);}
+
+  /* ── 普通标题 ── */
+  .slide-header{display:flex;align-items:center;gap:16px;margin-bottom:40px;flex-shrink:0;}
+  .slide-header .num{
+    font-size:13px;font-weight:700;color:var(--bg);
+    background:linear-gradient(135deg,var(--cyan),var(--blue));
+    width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .slide-header h2{font-size:30px;font-weight:700;color:#fff;}
+  .slide-header .bar{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+
+  /* ── 卡片 ── */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;}
+  .card.glow-cyan{box-shadow:0 0 20px rgba(0,212,255,.08);}
+  .card.glow-blue{box-shadow:0 0 20px rgba(59,130,246,.08);}
+  .card.glow-purple{box-shadow:0 0 20px rgba(168,85,247,.08);}
+
+  /* ── 布局 ── */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;flex:1;}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;flex:1;}
+  .col{display:flex;flex-direction:column;gap:16px;}
+
+  /* ── 标签 ── */
+  .tag{
+    display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;
+    border:1px solid currentColor;
+  }
+  .tag-cyan{color:var(--cyan);border-color:rgba(0,212,255,.4);background:rgba(0,212,255,.08);}
+  .tag-blue{color:var(--blue);border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.08);}
+  .tag-purple{color:var(--purple);border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.08);}
+  .tag-green{color:var(--green);border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08);}
+  .tag-orange{color:var(--orange);border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.08);}
+
+  /* ── 流程步骤 ── */
+  .flow{display:flex;align-items:center;gap:0;flex:1;}
+  .flow-step{
+    flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:20px 16px;text-align:center;position:relative;
+  }
+  .flow-step .icon{font-size:32px;margin-bottom:10px;}
+  .flow-step .label{font-size:13px;font-weight:600;color:#fff;margin-bottom:6px;}
+  .flow-step .desc{font-size:11px;color:#64748b;line-height:1.5;}
+  .flow-arrow{
+    font-size:20px;color:var(--cyan);opacity:.6;margin:0 6px;flex-shrink:0;
+  }
+  .flow-step::before{
+    content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:40%;height:2px;border-radius:2px;
+  }
+  .flow-step:nth-child(1)::before{background:var(--cyan);}
+  .flow-step:nth-child(3)::before{background:var(--blue);}
+  .flow-step:nth-child(5)::before{background:var(--purple);}
+  .flow-step:nth-child(7)::before{background:var(--green);}
+  .flow-step:nth-child(9)::before{background:var(--orange);}
+
+  /* ── 代码块 ── */
+  .code{
+    background:#020c18;border:1px solid var(--border);border-radius:8px;
+    padding:16px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;
+    color:#94a3b8;overflow:auto;
+  }
+  .code .kw{color:var(--blue);}
+  .code .cls{color:var(--cyan);}
+  .code .str{color:var(--green);}
+  .code .cm{color:#475569;}
+  .code .ann{color:var(--orange);}
+
+  /* ── 层级图 ── */
+  .arch-box{
+    display:flex;flex-direction:column;align-items:center;gap:8px;flex:1;
+  }
+  .arch-layer{
+    width:100%;border-radius:10px;padding:14px 20px;display:flex;
+    align-items:center;gap:16px;border:1px solid;
+  }
+  .arch-layer .layer-name{font-size:12px;font-weight:600;min-width:60px;}
+  .arch-layer .layer-items{display:flex;gap:8px;flex-wrap:wrap;}
+  .arch-layer .item{
+    font-size:11px;padding:3px 10px;background:rgba(0,0,0,.3);
+    border-radius:6px;border:1px solid rgba(255,255,255,.1);
+  }
+  .arch-arrow{font-size:18px;color:#334155;}
+
+  /* ── 对比表 ── */
+  table{width:100%;border-collapse:collapse;}
+  th{background:rgba(59,130,246,.15);color:var(--blue);font-size:13px;padding:10px 16px;text-align:left;}
+  td{padding:10px 16px;font-size:13px;border-bottom:1px solid var(--border);color:#cbd5e1;}
+  tr:last-child td{border-bottom:none;}
+  td.good{color:var(--green);}
+  td.better{color:var(--cyan);font-weight:600;}
+
+  /* ── 亮点列表 ── */
+  .highlight-list{display:flex;flex-direction:column;gap:12px;}
+  .hl-item{display:flex;align-items:flex-start;gap:14px;padding:14px;background:var(--card);border-radius:10px;border:1px solid var(--border);}
+  .hl-icon{font-size:22px;flex-shrink:0;margin-top:2px;}
+  .hl-text h4{font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;}
+  .hl-text p{font-size:12px;color:#64748b;line-height:1.6;}
+
+  /* ── 数据卡 ── */
+  .stat-card{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:28px 20px;text-align:center;
+  }
+  .stat-card .num{font-size:48px;font-weight:900;font-variant-numeric:tabular-nums;}
+  .stat-card .unit{font-size:16px;font-weight:300;margin-left:4px;}
+  .stat-card .label{font-size:12px;color:#64748b;margin-top:8px;}
+
+  /* ── 结语 ── */
+  .closing{
+    flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+    text-align:center;gap:24px;
+  }
+  .closing h2{
+    font-size:42px;font-weight:900;
+    background:linear-gradient(135deg,var(--cyan),var(--blue),var(--purple));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .closing p{font-size:18px;color:#64748b;max-width:600px;line-height:1.8;}
+  .closing .tags{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+
+  /* ── 导航 ── */
+  .nav{
+    position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:16px;z-index:100;
+    background:rgba(5,15,30,.85);backdrop-filter:blur(12px);
+    border:1px solid var(--border);border-radius:40px;padding:10px 24px;
+  }
+  .nav button{
+    background:none;border:none;cursor:pointer;padding:6px 10px;
+    color:#64748b;font-size:18px;border-radius:8px;transition:all .2s;
+  }
+  .nav button:hover{color:var(--cyan);}
+  .nav .progress{display:flex;gap:6px;align-items:center;}
+  .nav .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--border);
+    cursor:pointer;transition:all .2s;
+  }
+  .nav .dot.active{background:var(--cyan);width:20px;border-radius:3px;}
+  .nav .counter{font-size:12px;color:#475569;min-width:40px;text-align:center;}
+  .nav .key-hint{font-size:11px;color:#334155;margin-left:8px;}
+
+  small{font-size:11px;color:#475569;}
+</style>
+</head>
+<body>
+
+<div class="slides" id="slides">
+
+  <!-- ══ Slide 1: 封面 ══ -->
+  <div class="slide slide-title active" id="s0">
+    <div class="logo">AI Coding · 开发实践汇报 · 2026</div>
+    <h1>借助 AI Coding 工具<br/>构建全栈业务系统</h1>
+    <div class="sub">移动储能机器人运营中心 · 开发全链路复盘</div>
+    <div class="meta">
+      <span>工具 <b>Cursor + Claude</b></span>
+      <span>技术栈 <b>Spring Boot + React</b></span>
+      <span>周期 <b>极短交付</b></span>
+    </div>
+  </div>
+
+  <!-- ══ Slide 2: 背景与目标 ══ -->
+  <div class="slide" id="s1">
+    <div class="slide-header"><div class="num">01</div><h2>背景与挑战</h2><div class="bar"></div></div>
+    <div class="grid-2" style="align-items:start;">
+      <div class="col">
+        <div class="card glow-cyan">
+          <div style="font-size:13px;color:var(--cyan);font-weight:600;margin-bottom:16px;">📋 业务背景</div>
+          <div class="highlight-list">
+            <div class="hl-item">
+              <div class="hl-icon">🤖</div>
+              <div class="hl-text">
+                <h4>移动储能机器人运营管理</h4>
+                <p>多站点、多机器人调度，需要实时掌握订单完成率、充电效率、设备状态等核心指标</p>
+              </div>
+            </div>
+            <div class="hl-item">
+              <div class="hl-icon">📊</div>
+              <div class="hl-text">
+                <h4>数据可视化大盘需求</h4>
+                <p>需要交付包含 7 个核心图表模块的运营中心看板，支持多站点筛选和时间维度分析</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:13px;color:#f59e0b;font-weight:600;margin-bottom:14px;">⚠️ 传统开发痛点</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8;">
+              <span style="color:#ef4444;">✗</span> 全栈开发需要多人协作，沟通成本高
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8;">
+              <span style="color:#ef4444;">✗</span> 从原型到代码的还原效率低
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8;">
+              <span style="color:#ef4444;">✗</span> 架构设计与代码质量难以兼顾
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#94a3b8;">
+              <span style="color:#ef4444;">✗</span> 前后端接口联调耗时长
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card glow-blue">
+          <div style="font-size:13px;color:var(--blue);font-weight:600;margin-bottom:16px;">🎯 交付目标</div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="border-left:3px solid var(--cyan);padding-left:14px;">
+              <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;">前端 Dashboard</div>
+              <div style="font-size:12px;color:#64748b;">React + ECharts 数据可视化看板，深色科技风 UI，含 7 个图表模块</div>
+            </div>
+            <div style="border-left:3px solid var(--blue);padding-left:14px;">
+              <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;">后端 API 服务</div>
+              <div style="font-size:12px;color:#64748b;">Spring Boot MVC 架构，统一 Result 返回，对接云服务客户端</div>
+            </div>
+            <div style="border-left:3px solid var(--purple);padding-left:14px;">
+              <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;">前后端全链路贯通</div>
+              <div style="font-size:12px;color:#64748b;">站点+时间双维度筛选，数据实时联动刷新</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.04);">
+          <div style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:12px;">✅ AI Coding 解法</div>
+          <p style="font-size:13px;color:#94a3b8;line-height:1.8;">
+            借助 <b style="color:#fff;">Cursor IDE + Claude 大模型</b>，将「原型图描述 → 需求分析 → 代码实现 → 问题修复」全链路压缩，<b style="color:var(--cyan);">单人即可高质量交付完整全栈系统</b>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Slide 3: AI Coding 工具介绍 ══ -->
+  <div class="slide" id="s2">
+    <div class="slide-header"><div class="num">02</div><h2>AI Coding 工具：Cursor</h2><div class="bar"></div></div>
+    <div class="grid-2" style="align-items:start;gap:28px;">
+      <div class="col">
+        <div class="card glow-cyan" style="padding:28px;">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+            <div style="font-size:42px;">⚡</div>
+            <div>
+              <div style="font-size:20px;font-weight:700;color:#fff;">Cursor IDE</div>
+              <div style="font-size:12px;color:#64748b;">AI-First 代码编辑器</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <span style="color:var(--cyan);font-size:16px;margin-top:2px;">◆</span>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#fff;">Agent 模式</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px;">理解全局上下文，自主完成多文件编辑、工具调用、项目构建</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <span style="color:var(--blue);font-size:16px;margin-top:2px;">◆</span>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#fff;">多模态输入</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px;">支持图片、文档直接输入，实现原型图 → 代码的直接转换</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <span style="color:var(--purple);font-size:16px;margin-top:2px;">◆</span>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#fff;">代码库感知</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px;">自动理解现有代码结构，保持风格一致性，增量改造无冲突</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <span style="color:var(--green);font-size:16px;margin-top:2px;">◆</span>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#fff;">终端集成</div>
+                <div style="font-size:12px;color:#64748b;margin-top:2px;">直接执行构建、启动、调试命令，形成完整的「代码-运行-反馈」闭环</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col" style="gap:20px;">
+        <div style="font-size:13px;color:#64748b;font-weight:500;margin-bottom:4px;">本项目使用的主要能力</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div class="card" style="padding:18px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:8px;">🖼️</div>
+            <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:4px;">原型图识别</div>
+            <div style="font-size:11px;color:#64748b;">上传原型截图直接生成 UI 组件代码</div>
+          </div>
+          <div class="card" style="padding:18px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:8px;">🏗️</div>
+            <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:4px;">架构生成</div>
+            <div style="font-size:11px;color:#64748b;">描述需求自动生成 MVC 分层完整代码</div>
+          </div>
+          <div class="card" style="padding:18px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:8px;">🔧</div>
+            <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:4px;">问题诊断</div>
+            <div style="font-size:11px;color:#64748b;">截图报错，AI 定位根因并给出修复方案</div>
+          </div>
+          <div class="card" style="padding:18px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:8px;">🔄</div>
+            <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:4px;">迭代重构</div>
+            <div style="font-size:11px;color:#64748b;">需求变更时快速改造，保持代码质量</div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.04);padding:18px;">
+          <div style="font-size:12px;color:var(--cyan);font-weight:600;margin-bottom:8px;">💡 核心交互模式</div>
+          <div style="font-size:12px;color:#94a3b8;line-height:1.9;">
+            <b style="color:#fff;">自然语言描述需求</b> → AI 理解意图并生成多文件代码<br/>
+            <b style="color:#fff;">截图 + 文字反馈</b> → AI 对比差异并精准修改<br/>
+            <b style="color:#fff;">参考代码 + 改造指令</b> → AI 复用规范并扩展实现
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Slide 4: 开发链路全景 ══ -->
+  <div class="slide" id="s3">
+    <div class="slide-header"><div class="num">03</div><h2>开发全链路</h2><div class="bar"></div></div>
+    <div class="flow" style="margin-bottom:28px;">
+      <div class="flow-step">
+        <div class="icon">📋</div>
+        <div class="label">需求分析</div>
+        <div class="desc">上传需求文档<br/>+ 原型图截图</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="icon">🏗️</div>
+        <div class="label">工程搭建</div>
+        <div class="desc">AI 生成项目结构<br/>+ 构建配置</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="icon">💻</div>
+        <div class="label">功能开发</div>
+        <div class="desc">AI 驱动前后端<br/>代码生成</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="icon">🔗</div>
+        <div class="label">接口联调</div>
+        <div class="desc">前后端对接<br/>+ 参数适配</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="icon">✨</div>
+        <div class="label">迭代优化</div>
+        <div class="desc">截图反馈<br/>→ 精准修复</div>
+      </div>
+    </div>
+    <div class="grid-3" style="flex:none;">
+      <div class="card" style="padding:20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <span class="tag tag-cyan">阶段一</span>
+          <span style="font-size:13px;font-weight:600;color:#fff;">需求 → 工程</span>
+        </div>
+        <div style="font-size:12px;color:#64748b;line-height:1.8;">
+          ✦ @订单分析报表.docx 上传需求文档<br/>
+          ✦ 上传原型图对照 UI 规范<br/>
+          ✦ AI 自动生成 Vite + React + Tailwind 前端工程配置<br/>
+          ✦ 自动生成 Spring Boot 3 Maven 后端工程骨架
+        </div>
+      </div>
+      <div class="card" style="padding:20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <span class="tag tag-blue">阶段二</span>
+          <span style="font-size:13px;font-weight:600;color:#fff;">功能实现</span>
+        </div>
+        <div style="font-size:12px;color:#64748b;line-height:1.8;">
+          ✦ 7 个 ECharts 图表组件逐一生成<br/>
+          ✦ Spring Boot MVC 三层架构生成<br/>
+          ✦ CloudApiClient 抽象层 + Mock 实现<br/>
+          ✦ 统一 Result&lt;T&gt; 返回封装
+        </div>
+      </div>
+      <div class="card" style="padding:20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <span class="tag tag-purple">阶段三</span>
+          <span style="font-size:13px;font-weight:600;color:#fff;">调优收尾</span>
+        </div>
+        <div style="font-size:12px;color:#64748b;line-height:1.8;">
+          ✦ 截图对比 → 热力图渲染修复<br/>
+          ✦ 站点/时间筛选全链路贯通<br/>
+          ✦ Axios 响应拦截器统一解包<br/>
+          ✦ 全局异常处理器兜底
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Slide 5: 系统架构 ══ -->
+  <div class="slide" id="s4">
+    <div class="slide-header"><div class="num">04</div><h2>系统架构</h2><div class="bar"></div></div>
+    <div class="grid-2">
+      <div class="arch-box">
+        <div style="font-size:12px;color:#64748b;font-weight:600;align-self:flex-start;margin-bottom:4px;">前端 · React SPA</div>
+        <div class="arch-layer" style="border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.06);">
+          <div class="layer-name" style="color:var(--cyan);">视图层</div>
+          <div class="layer-items">
+            <span class="item">Dashboard</span><span class="item">StatCard</span><span class="item">ChartCard</span>
+          </div>
+        </div>
+        <div class="arch-arrow">↕</div>
+        <div class="arch-layer" style="border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.06);">
+          <div class="layer-name" style="color:var(--blue);">图表层</div>
+          <div class="layer-items">
+            <span class="item">ECharts 完单率</span><span class="item">热力图</span><span class="item">堆叠条</span><span class="item">用户频次</span>
+          </div>
+        </div>
+        <div class="arch-arrow">↕</div>
+        <div class="arch-layer" style="border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.06);">
+          <div class="layer-name" style="color:var(--purple);">服务层</div>
+          <div class="layer-items">
+            <span class="item">api.js</span><span class="item">Axios 拦截器</span><span class="item">Result 解包</span>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:#475569;text-align:center;">Vite 代理 → localhost:8080</div>
+      </div>
+      <div class="arch-box">
+        <div style="font-size:12px;color:#64748b;font-weight:600;align-self:flex-start;margin-bottom:4px;">后端 · Spring Boot 3</div>
+        <div class="arch-layer" style="border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.06);">
+          <div class="layer-name" style="color:var(--cyan);">Controller</div>
+          <div class="layer-items">
+            <span class="item">DashboardController</span><span class="item">Result&lt;T&gt; 封装</span><span class="item">GlobalExceptionHandler</span>
+          </div>
+        </div>
+        <div class="arch-arrow">↕</div>
+        <div class="arch-layer" style="border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.06);">
+          <div class="layer-name" style="color:var(--blue);">Service</div>
+          <div class="layer-items">
+            <span class="item">DashboardService</span><span class="item">siteId/days 筛选</span><span class="item">聚合计算</span>
+          </div>
+        </div>
+        <div class="arch-arrow">↕</div>
+        <div class="arch-layer" style="border-color:rgba(168,85,247,.3);background:rgba(168,85,247,.06);">
+          <div class="layer-name" style="color:var(--purple);">Client</div>
+          <div class="layer-items">
+            <span class="item">CloudApiClient 接口</span><span class="item">MockCloudApiClient</span><span class="item">CloudApiClientImpl</span>
+          </div>
+        </div>
+        <div class="arch-layer" style="border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.06);margin-top:8px;">
+          <div class="layer-name" style="color:var(--green);">DTO</div>
+          <div class="layer-items">
+            <span class="item">OrderRecord</span><span class="item">RobotRecord</span><span class="item">SiteInfo</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Slide 6: 前端开发亮点 ══ -->
+  <div class="slide" id="s5">
+    <div class="slide-header"><div class="num">05</div><h2>前端开发亮点</h2><div class="bar"></div></div>
+    <div class="grid-2">
+      <div class="col">
+        <div class="card glow-cyan" style="padding:20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="font-size:18px;">🎨</span>
+            <span style="font-size:14px;font-weight:600;color:#fff;">原型图 → 代码还原</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.9;">
+            直接将原型截图作为输入，AI 识别布局结构、颜色规范、图表类型，生成高度还原的 Tailwind CSS 样式代码，<b style="color:#94a3b8;">无需手工量取像素</b>
+          </div>
+        </div>
+        <div class="card" style="padding:20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="font-size:18px;">🔥</span>
+            <span style="font-size:14px;font-weight:600;color:#fff;">热力图双层渲染</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.9;">
+            攻克 ECharts Heatmap 无原生高斯模糊问题：
+            <span style="color:var(--cyan);">下层</span>渲染热力色块 + CSS <code style="background:#020c18;padding:2px 6px;border-radius:4px;">filter:blur(20px)</code>，
+            <span style="color:var(--blue);">上层</span>叠加坐标轴 + 网格，<code style="background:#020c18;padding:2px 6px;border-radius:4px;">appendToBody</code> 修复 Tooltip 模糊问题
+          </div>
+        </div>
+        <div class="card" style="padding:20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="font-size:18px;">⚙️</span>
+            <span style="font-size:14px;font-weight:600;color:#fff;">数据驱动图表</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.9;">
+            所有图表选项从 <code style="background:#020c18;padding:2px 6px;border-radius:4px;">buildXxxOption(data)</code> 函数生成，数据与配置完全解耦，切换筛选条件时无需重建组件
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="padding:20px;">
+          <div style="font-size:13px;color:var(--blue);font-weight:600;margin-bottom:14px;">🔌 筛选联动实现</div>
+          <div class="code">
+<span class="cm">// 站点 & 时间状态绑定</span>
+<span class="kw">const</span> [siteId, setSiteId] = useState(<span class="str">''</span>);
+<span class="kw">const</span> [days, setDays] = useState(<span class="str">7</span>);
+
+<span class="cm">// 依赖变化自动重新请求</span>
+<span class="kw">useEffect</span>(() => {
+  setLoading(<span class="str">true</span>);
+  Promise.all([
+    api.getStats(siteId, days),
+    api.getHeatmap(siteId, days),
+    <span class="cm">// ... 其余 5 个接口</span>
+  ]).then(([s, hm, ...]) => { <span class="cm">/* 更新状态 */</span> });
+}, [siteId, days]); <span class="cm">// ← 关键依赖</span>
+          </div>
+        </div>
+        <div class="card" style="padding:20px;">
+          <div style="font-size:13px;color:var(--purple);font-weight:600;margin-bottom:14px;">🛡️ Axios 统一拦截</div>
+          <div class="code">
+instance.interceptors.response.use(
+  (response) => {
+    <span class="kw">const</span> result = response.data;
+    <span class="cm">// 自动解包 Result&lt;T&gt;</span>
+    <span class="kw">if</span> (result.success && result.code === <span class="str">200</span>)
+      <span class="kw">return</span> result.data; <span class="cm">// 业务组件只见 data</span>
+    <span class="kw">return</span> Promise.reject(
+      <span class="kw">new</span> <span class="cls">Error</span>(result.msg)
+    );
+  }
+);
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Slide 7: 后端开发亮点 ══ -->
+  <div class="slide" id="s6">
+    <div class="slide-header"><div class="num">06</div><h2>后端开发亮点</h2><div class="bar"></div></div>
+    <div class="grid-2">
+      <div class="col">
+        <div class="card glow-blue" style="padding:20px;">
+          <div style="font-size:13px;color:var(--cyan);font-weight:600;margin-bottom:14px;">🏛️ 标准 MVC 分层</div>
+          <div class="code" style="font-size:11px;">
+<span class="cm">// Controller：纯路由，零业务逻辑</span>
+<span class="ann">@GetMapping</span>(<span class="str">"/stats"</span>)
+<span class="kw">public</span> <span class="cls">Result</span>&lt;Map&gt; getStats(
+    <span class="ann">@RequestParam</span>(required=<span class="kw">false</span>) String siteId,
+    <span class="ann">@RequestParam</span>(defaultValue=<span class="str">"7"</span>) <span class="kw">int</span> days) {
+  <span class="kw">return</span> Result.success(
+      dashboardService.getStats(siteId, days));
+}
+
+<span class="cm">// Service：聚合计算，屏蔽数据来源</span>
+<span class="kw">public</span> Map getStats(String siteId, <span class="kw">int</span> days) {
+  List&lt;OrderRecord&gt; orders = filterOrders(siteId,days);
+  <span class="kw">long</span> totalKwh = orders.stream()
+      .mapToDouble(OrderRecord::getActualKwh).sum();
+  <span class="cm">// ...</span>
+}
+          </div>
+        </div>
+        <div class="card" style="padding:20px;">
+          <div style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:14px;">📦 统一 Result&lt;T&gt; 设计</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:#64748b;">
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:#020c18;border-radius:6px;">
+              <span style="color:#94a3b8;">code</span><span style="color:var(--cyan);">Integer</span><span>200 / 400 / 500</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:#020c18;border-radius:6px;">
+              <span style="color:#94a3b8;">success</span><span style="color:var(--cyan);">Boolean</span><span>true / false</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:#020c18;border-radius:6px;">
+              <span style="color:#94a3b8;">msg</span><span style="color:var(--cyan);">String</span><span>提示信息</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:#020c18;border-radius:6px;">
+              <span style="color:#94a3b8;">msgDetail</span><span style="color:var(--cyan);">String</span><span>异常详情（可选）</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:#020c18;border-radius:6px;">
+              <span style="color:#94a3b8;">data</span><span style="color:var(--cyan);">T</span><span>泛型业务数据</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:#020c18;border-radius:6px;">
+              <span style="color:#94a3b8;">timestamp</span><span style="color:var(--cyan);">Long</span><span>服务端时间戳</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card" style="padding:20px;">
+          <div style="font-size:13px;color:var(--purple);font-weight:600;margin-bottom:14px;">🔌 CloudApiClient 抽象</div>
+          <div style="font-size:12px;color:#64748b;line-height:1.9;margin-bottom:14px;">
+            通过接口隔离数据来源，<b style="color:#94a3b8;">一键切换</b> Mock / 真实云平台，Service 层零改动
+          </div>
+          <div class="code" style="font-size:11px;">
+<span class="cm">// 接口定义</span>
+<span class="kw">public interface</span> <span class="cls">CloudApiClient</span> {
+  List&lt;OrderRecord&gt; getOrders();
+  List&lt;RobotRecord&gt; getRobots();
+  List&lt;Map&gt; getSites();
+}
+
+<span class="cm">// application.properties 切换</span>
+<span class="cm"># cloud.api.mock=true  → MockCloudApiClient</span>
+<span class="cm"># cloud.api.mock=false → CloudApiClientImpl (HTTP)</span>
+          </div>
+        </div>
+        <div class="card" style="padding:20px;">
+          <div style="font-size:13px;color:var(--orange);font-weight:600;margin-bottom:14px;">🗄️ Mock 数据仿真</div>
+          <div style="font-size:12px;color:#64748b;line-height:1.8;">
+            MockCloudApiClient 生成 <b style="color:#fff;">3 站点 × 30 天 × ~180 单/天 ≈ 16,200 条</b>原始订单记录，订单时间分布遵循<b style="color:var(--cyan);">双高斯峰</b>（早高峰 8:30 / 晚高峰 16:00），用户忠诚度符合 Zipf 分布
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Slide 8: AI 协作典型案例 ══ -->
+  <div class="slide" id="s7">
+    <div class="slide-header"><div class="num">07</div><h2>AI 协作典型案例</h2><div class="bar"></div></div>
+    <div class="grid-2" style="gap:20px;">
+      <div class="col" style="gap:14px;">
+        <div class="card" style="padding:18px;border-color:rgba(0,212,255,.3);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:16px;">🖼️</span>
+            <span style="font-size:13px;font-weight:600;color:var(--cyan);">案例一：原型对照开发</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.8;">
+            <b style="color:#94a3b8;">输入：</b>上传原型截图 + "对照原型改进已有前端工程"<br/>
+            <b style="color:#94a3b8;">AI 输出：</b>识别出缺失的「订单取消分析」「用户充电频次」两个图表，自动补全并实现完整逻辑，一次对话交付 6 个图表
+          </div>
+        </div>
+        <div class="card" style="padding:18px;border-color:rgba(239,68,68,.3);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:16px;">🐛</span>
+            <span style="font-size:13px;font-weight:600;color:#ef4444;">案例二：Tooltip 消失 Bug</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.8;">
+            <b style="color:#94a3b8;">反馈：</b>"热力图改出新 Bug，悬浮文字没了"<br/>
+            <b style="color:#94a3b8;">AI 诊断：</b>Tooltip 在 <code>filter:blur()</code> 容器内被一起模糊，定位到 ECharts <code>appendToBody:true</code> 参数，一行代码修复
+          </div>
+        </div>
+        <div class="card" style="padding:18px;border-color:rgba(16,185,129,.3);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:16px;">🏛️</span>
+            <span style="font-size:13px;font-weight:600;color:var(--green);">案例三：MVC 重构</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.8;">
+            <b style="color:#94a3b8;">指令：</b>"按 MVC 规范重构，Controller 不写业务代码"<br/>
+            <b style="color:#94a3b8;">AI 输出：</b>新建 service 包，正确拆分业务逻辑，保持接口契约不变，代码规范符合生产标准
+          </div>
+        </div>
+      </div>
+      <div class="col" style="gap:14px;">
+        <div class="card" style="padding:18px;border-color:rgba(168,85,247,.3);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:16px;">📐</span>
+            <span style="font-size:13px;font-weight:600;color:var(--purple);">案例四：参考代码迁移</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.8;">
+            <b style="color:#94a3b8;">指令：</b>@参考 BocloudResult @CatlCloudResult 设计统一返回类<br/>
+            <b style="color:#94a3b8;">AI 输出：</b>融合两者优点，设计含 code/success/msg/data/timestamp 的 Result&lt;T&gt;，同时新增全局异常处理器
+          </div>
+        </div>
+        <div class="card" style="padding:18px;border-color:rgba(249,115,22,.3);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:16px;">🔗</span>
+            <span style="font-size:13px;font-weight:600;color:var(--orange);">案例五：筛选全链路</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.8;">
+            <b style="color:#94a3b8;">指令：</b>"站点和时间按钮没对接接口，加参数，前后端一起适配"<br/>
+            <b style="color:#94a3b8;">AI 输出：</b>同步修改 DTO/Client/Service/Controller/api.js/App.jsx，六层代码统一完成，无遗漏
+          </div>
+        </div>
+        <div class="card" style="padding:18px;border-color:rgba(59,130,246,.3);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="font-size:16px;">🎨</span>
+            <span style="font-size:13px;font-weight:600;color:var(--blue);">案例六：视觉迭代</span>
+          </div>
+          <div style="font-size:12px;color:#64748b;line-height:1.8;">
+            <b style="color:#94a3b8;">反馈截图：</b>"与原型差距大，要热成像样式"<br/>
+            <b style="color:#94a3b8;">AI 输出：</b>理解热成像色彩科学，给出多轮颜色方案调整，高斯模糊 6px→20px，最终匹配原型效果
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Slide 9: 交付成果 ══ -->
+  <div class="slide" id="s8">
+    <div class="slide-header"><div class="num">08</div><h2>交付成果</h2><div class="bar"></div></div>
+    <div class="grid-4" style="align-items:stretch;margin-bottom:24px;">
+      <div class="stat-card">
+        <div class="num" style="color:var(--cyan);">7<span class="unit" style="color:var(--cyan);">个</span></div>
+        <div class="label">图表模块<br/>完单率 / 热力图 / 堆叠条形<br/>饼图 / 柱状图 / 取消分析</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--blue);">8<span class="unit" style="color:var(--blue);">个</span></div>
+        <div class="label">后端 REST 接口<br/>统一 Result&lt;T&gt; 包装<br/>全局异常兜底</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--purple);">3<span class="unit" style="color:var(--purple);">层</span></div>
+        <div class="label">后端标准分层<br/>Controller / Service<br/>CloudApiClient</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" style="color:var(--green);">16K<span class="unit" style="color:var(--green);">条</span></div>
+        <div class="label">仿真订单数据<br/>3 站点 × 30 天<br/>双高斯时间分布</div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th>能力维度</th>
+            <th>传统方式</th>
+            <th>AI Coding 方式</th>
+            <th>提升</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>工程搭建（构建配置 + 目录结构）</td>
+            <td>2~4 小时</td>
+            <td class="better">10 分钟</td>
+            <td class="good">↑ 10x+</td>
+          </tr>
+          <tr>
+            <td>图表组件开发（7 个图表）</td>
+            <td>1~2 天</td>
+            <td class="better">1~2 小时</td>
+            <td class="good">↑ 8x+</td>
+          </tr>
+          <tr>
+            <td>后端 MVC 三层代码</td>
+            <td>半天~1天</td>
+            <td class="better">30 分钟</td>
+            <td class="good">↑ 10x+</td>
+          </tr>
+          <tr>
+            <td>前后端接口联调</td>
+            <td>0.5~1 天</td>
+            <td class="better">1 小时</td>
+            <td class="good">↑ 6x+</td>
+          </tr>
+          <tr>
+            <td>Bug 定位与修复</td>
+            <td>不确定（依赖经验）</td>
+            <td class="better">分钟级（截图即可）</td>
+            <td class="good">质的飞跃</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ Slide 10: 总结 ══ -->
+  <div class="slide" id="s9">
+    <div class="slide-header"><div class="num">09</div><h2>总结与展望</h2><div class="bar"></div></div>
+    <div class="grid-2" style="align-items:start;gap:28px;">
+      <div class="col">
+        <div class="card glow-cyan" style="padding:24px;">
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:18px;">🔑 核心收获</div>
+          <div class="highlight-list">
+            <div class="hl-item" style="padding:12px;">
+              <div class="hl-icon" style="font-size:18px;">💬</div>
+              <div class="hl-text">
+                <h4>自然语言即是代码</h4>
+                <p>清晰的需求描述直接转化为高质量代码，架构设计和实现同步完成</p>
+              </div>
+            </div>
+            <div class="hl-item" style="padding:12px;">
+              <div class="hl-icon" style="font-size:18px;">👁️</div>
+              <div class="hl-text">
+                <h4>截图驱动迭代</h4>
+                <p>UI 问题无需文字精确描述，截图 + 简单说明即可触发精准修复</p>
+              </div>
+            </div>
+            <div class="hl-item" style="padding:12px;">
+              <div class="hl-icon" style="font-size:18px;">🌐</div>
+              <div class="hl-text">
+                <h4>全栈横向推进</h4>
+                <p>前后端代码同步生成，接口契约一次确定，联调成本接近于零</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col" style="gap:18px;">
+        <div class="card" style="padding:20px;">
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:16px;">🚀 最佳实践总结</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;color:#64748b;">
+            <div style="display:flex;gap:10px;">
+              <span style="color:var(--cyan);font-weight:700;min-width:20px;">①</span>
+              <span><b style="color:#94a3b8;">提供参考资产：</b>原型图、需求文档、参考代码，AI 产出质量显著提升</span>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <span style="color:var(--blue);font-weight:700;min-width:20px;">②</span>
+              <span><b style="color:#94a3b8;">分步确认推进：</b>每个功能模块验收后再进行下一步，避免雪球式返工</span>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <span style="color:var(--purple);font-weight:700;min-width:20px;">③</span>
+              <span><b style="color:#94a3b8;">指定规范约束：</b>明确架构分层、命名规范，AI 产出自动对齐团队标准</span>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <span style="color:var(--green);font-weight:700;min-width:20px;">④</span>
+              <span><b style="color:#94a3b8;">截图即是反馈：</b>视觉 Bug 用截图对比描述，比文字描述准确率更高</span>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="padding:20px;border-color:rgba(168,85,247,.3);">
+          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:16px;">🔭 后续方向</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;">
+            <span class="tag tag-cyan">对接真实云平台接口</span>
+            <span class="tag tag-blue">增加实时 WebSocket 推送</span>
+            <span class="tag tag-purple">机器人地图可视化</span>
+            <span class="tag tag-green">报表导出 Excel/PDF</span>
+            <span class="tag tag-orange">告警阈值配置管理</span>
+          </div>
+        </div>
+        <div style="text-align:center;padding:16px;border:1px solid var(--border);border-radius:12px;background:rgba(0,212,255,.04);">
+          <div style="font-size:13px;color:#64748b;margin-bottom:6px;">核心观点</div>
+          <div style="font-size:15px;font-weight:600;color:#fff;line-height:1.7;">
+            AI Coding 不是替代开发者，<br/>而是<span style="color:var(--cyan);">将开发者的生产力放大 10 倍</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /slides -->
+
+<!-- 导航栏 -->
+<div class="nav">
+  <button id="prevBtn" onclick="navigate(-1)">‹</button>
+  <div class="progress" id="dots"></div>
+  <div class="counter" id="counter">1 / 10</div>
+  <button id="nextBtn" onclick="navigate(1)">›</button>
+  <span class="key-hint">← →</span>
+</div>
+
+<script>
+  const total = 10;
+  let cur = 0;
+  const slides = document.querySelectorAll('.slide');
+  const dotsEl = document.getElementById('dots');
+  const counterEl = document.getElementById('counter');
+
+  // 生成导航点
+  for(let i=0;i<total;i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0?' active':'');
+    d.onclick = () => goTo(i);
+    dotsEl.appendChild(d);
+  }
+
+  function goTo(n){
+    slides[cur].classList.remove('active');
+    slides[cur].classList.add('prev');
+    setTimeout(()=>slides[cur].classList.remove('prev'), 500);
+    cur = Math.max(0, Math.min(total-1, n));
+    slides[cur].classList.add('active');
+    document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===cur));
+    counterEl.textContent = (cur+1) + ' / ' + total;
+  }
+
+  function navigate(dir){ goTo(cur + dir); }
+
+  document.addEventListener('keydown', e => {
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' ') navigate(1);
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp') navigate(-1);
+    if(e.key==='Home') goTo(0);
+    if(e.key==='End') goTo(total-1);
+  });
+</script>
+</body>
+</html>

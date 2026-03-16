@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  width:1600px;height:900px;overflow:hidden;
+  background:#050f1e;
+  font-family:'Microsoft YaHei','Noto Sans SC',sans-serif;
+  color:#e2e8f0;
+  padding:20px 28px 16px;
+  position:relative;
+}
+body::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(26,58,92,.18) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(26,58,92,.18) 1px,transparent 1px);
+  background-size:50px 50px;pointer-events:none;
+}
+:root{
+  --cyan:#00d4ff;--blue:#3b82f6;--purple:#a855f7;
+  --green:#10b981;--orange:#f97316;--red:#ef4444;
+  --card:#0b1f38;--bdr:#1a3a5c;--sub:#94a3b8;--dim:#475569;
+}
+
+.title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;position:relative;z-index:1}
+.title-row h1{font-size:20px;font-weight:900;background:linear-gradient(135deg,#fff,var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ai-chip{font-size:10px;font-weight:600;color:var(--cyan);background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.35);padding:3px 12px;border-radius:20px}
+
+.top-bar{height:2px;background:linear-gradient(90deg,var(--cyan),var(--blue),var(--purple),transparent);border-radius:2px;margin-bottom:12px;position:relative;z-index:1}
+
+/* ── Tool Legend ── */
+.tool-legend{
+  display:flex;align-items:center;gap:14px;
+  padding:4px 12px;background:rgba(0,0,0,.25);border-radius:6px;
+  border:1px solid rgba(26,58,92,.4);font-size:9px;
+}
+.tl-item{display:flex;align-items:center;gap:4px;color:var(--sub)}
+
+/* ── Tool Badge ── */
+.tb{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:8px;font-weight:700;letter-spacing:.3px;
+  padding:1px 6px;border-radius:3px;
+  text-transform:uppercase;white-space:nowrap;line-height:1.4
+}
+.tb-c{color:#4fc3f7;background:rgba(0,122,204,.18);border:1px solid rgba(0,122,204,.4)}
+.tb-cl{color:#fbbf24;background:rgba(217,119,6,.18);border:1px solid rgba(217,119,6,.4)}
+.tb-co{color:#a78bfa;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.35)}
+.tb-h{color:var(--orange);background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.35)}
+
+/* ── Flow timeline ── */
+.flow{display:flex;align-items:stretch;gap:0;margin-bottom:6px;position:relative;z-index:1}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
+.step-box{
+  width:100%;padding:5px 4px 4px;background:var(--card);
+  border-top:3px solid;text-align:center;cursor:default;
+}
+.step-num{font-size:9px;font-weight:700;color:#fff;opacity:.5;margin-bottom:1px}
+.step-name{font-size:11px;font-weight:700;line-height:1.2}
+.step-sub{font-size:9px;color:var(--sub);margin-top:1px;line-height:1.2}
+.step-tool{margin-top:3px}
+.step-arrow{position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--dim);z-index:2}
+.step:last-child .step-arrow{display:none}
+.ai-step .step-box{background:rgba(0,212,255,.1);border-color:var(--cyan)!important}
+.ai-step .step-name{color:var(--cyan)}
+
+/* ── Deliverables Row ── */
+.dlv-row{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 10px;margin-bottom:8px;
+  background:rgba(0,212,255,.03);border:1px dashed rgba(0,212,255,.15);
+  border-radius:5px;position:relative;z-index:1;overflow:hidden;
+  flex-wrap:nowrap;
+}
+.dlv-label{font-size:8px;font-weight:700;color:var(--cyan);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.dlv-tag{
+  font-size:8px;padding:1px 6px;border-radius:3px;white-space:nowrap;
+  background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.15);color:#8ac8d8;flex-shrink:0
+}
+
+/* ── Main grid ── */
+.main-grid{display:grid;grid-template-columns:1fr 1fr 0.88fr;gap:10px;position:relative;z-index:1}
+
+/* ── Panel ── */
+.panel{background:var(--card);border:1px solid var(--bdr);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px;position:relative}
+.panel.ai{border-color:var(--cyan);box-shadow:0 0 16px rgba(0,212,255,.08)}
+.panel-title{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:1px}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.panel-tb{position:absolute;top:8px;right:8px}
+
+/* ── Sub panel ── */
+.sub{background:#020c18;border:1px solid var(--bdr);border-radius:6px;padding:7px 8px}
+.sub-title{font-size:10px;font-weight:700;margin-bottom:4px}
+.row{display:flex;align-items:flex-start;gap:5px;font-size:10px;color:var(--sub);padding:1px 0;line-height:1.4}
+.row::before{content:'▸';color:var(--cyan);flex-shrink:0;margin-top:0px}
+
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.chip{font-size:9px;padding:1px 6px;border-radius:10px;border:1px solid;font-weight:600}
+.chip-c{color:var(--cyan);border-color:rgba(0,212,255,.4);background:rgba(0,212,255,.08)}
+.chip-b{color:var(--blue);border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.08)}
+.chip-p{color:var(--purple);border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.08)}
+.chip-g{color:var(--green);border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08)}
+.chip-o{color:var(--orange);border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.08)}
+
+.api{display:flex;align-items:center;gap:5px;padding:2px 5px;background:#020c18;border-radius:4px;border:1px solid var(--bdr);font-size:9px}
+.method{background:var(--blue);color:#fff;padding:1px 4px;border-radius:3px;font-weight:700;flex-shrink:0;font-size:8px}
+.path{font-family:monospace;color:var(--cyan);font-size:9px}
+.desc{margin-left:auto;color:var(--dim);font-size:9px}
+
+.field{display:flex;gap:5px;font-size:9px;padding:1px 0;border-bottom:1px solid #0d1f30}
+.field:last-child{border:none}
+.fn{font-family:monospace;color:var(--cyan);width:100px;flex-shrink:0}
+.ft{color:var(--purple);width:45px;flex-shrink:0;font-family:monospace}
+.fd{color:var(--sub)}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+
+/* ── Workspace Mockup (compact) ── */
+.ws-mock{
+  background:#1e1e1e;border:1px solid #333;border-radius:5px;
+  font-family:Consolas,'JetBrains Mono',monospace;font-size:8px;
+  overflow:hidden
+}
+.ws-bar{background:#323233;padding:2px 8px;display:flex;align-items:center;gap:4px;border-bottom:1px solid #1a1a1a}
+.ws-bar .d{width:6px;height:6px;border-radius:50%}
+.ws-bar .dr{background:#ff5f57}.ws-bar .dy{background:#febc2e}.ws-bar .dg{background:#28c840}
+.ws-bar .wt{flex:1;text-align:center;font-size:8px;color:#777}
+.ws-body{padding:5px 8px;line-height:1.5}
+.ws-body .kw{color:#569cd6}.ws-body .str{color:#ce9178}.ws-body .cm{color:#6a9955}
+.ws-body .fn{color:#dcdcaa;width:auto}.ws-body .ty{color:#4ec9b0}
+.ws-prompt{color:#58a6ff}.ws-cmd{color:#e6edf3}.ws-ok{color:#3fb950}
+.ws-out{color:#7d8590}.ws-hl{color:#f0883e}.ws-warn{color:#d29922}
+
+/* ── Bottom bar ── */
+.bottom-bar{
+  display:flex;align-items:center;gap:12px;
+  padding:8px 14px;margin-top:8px;
+  background:linear-gradient(135deg,rgba(0,212,255,.05),rgba(59,130,246,.05));
+  border:1px solid rgba(0,212,255,.15);border-radius:8px;
+  position:relative;z-index:1
+}
+.bb-stat{text-align:center;padding:4px 12px}
+.bb-num{font-size:18px;font-weight:900}
+.bb-label{font-size:9px;color:var(--sub)}
+.bb-sep{width:1px;height:28px;background:var(--bdr)}
+.bb-quote{font-size:11px;font-weight:600;color:var(--cyan);flex:1;text-align:center}
+
+/* ── Review badge ── */
+.review-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:8px;font-weight:700;padding:1px 6px;border-radius:3px;
+  color:var(--red);background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3)
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+
+<div class="title-row">
+  <div style="display:flex;align-items:center;gap:14px">
+    <div>
+      <h1>AI 赋能全链路研发架构图 — 移动储能机器人运营中心</h1>
+      <div style="font-size:10px;color:var(--sub);margin-top:2px">从需求输入到云平台对接的完整独立系统研发过程</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="tool-legend">
+      <span style="font-size:8px;font-weight:700;color:#fff">工具:</span>
+      <div class="tl-item"><span class="tb tb-c">⚡ Cursor</span>IDE可视化</div>
+      <div class="tl-item"><span class="tb tb-cl">◆ Claude Code</span>CLI架构</div>
+      <div class="tl-item"><span class="tb tb-co">⬡ 协作</span></div>
+      <div class="tl-item"><span class="tb tb-h">👤 人工</span></div>
+    </div>
+    <span class="ai-chip">★ Cursor + Claude 大模型驱动</span>
+  </div>
+</div>
+
+<!-- ── Flow Timeline with Tool Badges ── -->
+<div class="flow">
+  <div class="step">
+    <div class="step-box" style="border-color:var(--sub)">
+      <div class="step-num">01</div>
+      <div class="step-name" style="color:var(--sub)">需求输入</div>
+      <div class="step-sub">文档 + 原型截图</div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step ai-step">
+    <div class="step-box">
+      <div class="step-num">02</div>
+      <div class="step-name">AI 智能分析</div>
+      <div class="step-sub">需求理解 · UI解读</div>
+      <div class="step-tool"><span class="tb tb-c" style="font-size:7px">⚡ Cursor</span></div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step ai-step">
+    <div class="step-box">
+      <div class="step-num">03</div>
+      <div class="step-name">AI 架构生成</div>
+      <div class="step-sub">工程骨架 + 配置</div>
+      <div class="step-tool"><span class="tb tb-cl" style="font-size:7px">◆ Claude Code</span></div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step ai-step">
+    <div class="step-box">
+      <div class="step-num">04</div>
+      <div class="step-name">AI 全栈研发</div>
+      <div class="step-sub">前端 + 后端编码</div>
+      <div class="step-tool"><span class="tb tb-co" style="font-size:7px">⬡ 协作</span></div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step">
+    <div class="step-box" style="border-color:var(--green)">
+      <div class="step-num">05</div>
+      <div class="step-name" style="color:var(--green)">前后端联调</div>
+      <div class="step-sub">Result&lt;T&gt; · 参数联动</div>
+      <div class="step-tool"><span class="tb tb-co" style="font-size:7px">⬡ 协作</span></div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step ai-step">
+    <div class="step-box">
+      <div class="step-num">06</div>
+      <div class="step-name">AI 接口设计</div>
+      <div class="step-sub">元数据 → 接口文档</div>
+      <div class="step-tool"><span class="tb tb-cl" style="font-size:7px">◆ Claude Code</span></div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step">
+    <div class="step-box" style="border-color:var(--orange)">
+      <div class="step-num">07</div>
+      <div class="step-name" style="color:var(--orange)">云平台对接</div>
+      <div class="step-sub">传统开发 + 联调</div>
+      <div class="step-tool"><span class="tb tb-h" style="font-size:7px">👤 人工</span></div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step">
+    <div class="step-box" style="border-color:var(--red);background:rgba(239,68,68,.08)">
+      <div class="step-num">08</div>
+      <div class="step-name" style="color:var(--red)">代码审查</div>
+      <div class="step-sub">安全加固 · 10项修复</div>
+      <div class="step-tool"><span class="tb tb-c" style="font-size:7px">⚡ Cursor</span></div>
+    </div>
+    <div class="step-arrow">›</div>
+  </div>
+  <div class="step">
+    <div class="step-box" style="border-color:var(--green);background:rgba(16,185,129,.1)">
+      <div class="step-num">09</div>
+      <div class="step-name" style="color:var(--green)">系统交付</div>
+      <div class="step-sub">完整独立系统</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Key Deliverables Summary ── -->
+<div class="dlv-row">
+  <span class="dlv-label">关键输出物 ›</span>
+  <span class="dlv-tag">📋 需求文档</span>
+  <span class="dlv-tag">🏗️ 技术选型方案</span>
+  <span class="dlv-tag">💻 App.jsx 前端</span>
+  <span class="dlv-tag">💻 DashboardService.java</span>
+  <span class="dlv-tag">📊 7个图表组件</span>
+  <span class="dlv-tag">🔌 8个REST端点</span>
+  <span class="dlv-tag">📋 cloud_API_doc.md</span>
+  <span class="dlv-tag">💻 DTO模型定义</span>
+  <span class="dlv-tag">⚙️ 10项安全修复</span>
+  <span class="dlv-tag">⚙️ 可运行完整系统</span>
+</div>
+
+<!-- ── Main 3-column content ── -->
+<div class="main-grid">
+
+  <!-- COL 1: Frontend + Cursor Workspace -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="panel ai" style="flex:1">
+      <div class="panel-tb"><span class="tb tb-c">⚡ Cursor</span></div>
+      <div class="panel-title"><div class="dot" style="background:var(--cyan)"></div><span style="color:var(--cyan)">前端系统</span><span style="font-size:9px;color:var(--sub);font-weight:400">React 18 + Vite + ECharts + Tailwind</span></div>
+      <div class="sub">
+        <div class="sub-title" style="color:var(--cyan)">Dashboard 组件（7个图表）</div>
+        <div class="g2" style="gap:3px">
+          <div class="row" style="padding:0">StatCard × 3（总订单/kWh/机器人）</div>
+          <div class="row" style="padding:0">完单率环形图</div>
+          <div class="row" style="padding:0">结束原因饼图</div>
+          <div class="row" style="padding:0">24h 热力图（双层渲染）</div>
+          <div class="row" style="padding:0">流程耗时堆叠条（自定义SVG）</div>
+          <div class="row" style="padding:0">取消分析饼图 + 图例</div>
+          <div class="row" style="padding:0">用户频次柱状图</div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title" style="color:var(--purple)">服务 & 状态层</div>
+        <div class="row">api.js — Axios + buildParams + 响应拦截</div>
+        <div class="row">useState / useEffect 筛选联动刷新</div>
+      </div>
+    </div>
+
+    <!-- Cursor Workspace Mockup -->
+    <div class="ws-mock">
+      <div class="ws-bar">
+        <div class="d dr"></div><div class="d dy"></div><div class="d dg"></div>
+        <div class="wt">Cursor — robot_op_center_frontend / App.jsx</div>
+      </div>
+      <div class="ws-body" style="display:flex;gap:6px">
+        <div style="flex:1;border-right:1px solid #333;padding-right:6px">
+          <div><span class="kw">import</span> { <span class="ty">useState</span>, <span class="ty">useEffect</span> } <span class="kw">from</span> <span class="str">'react'</span>;</div>
+          <div><span class="kw">const</span> <span style="color:#dcdcaa">StatCard</span> = ({ label, value }) =&gt; (</div>
+          <div>&nbsp;&nbsp;&lt;<span class="kw">div</span> <span class="ty">className</span>=<span class="str">"bg-[#0a1e38]"</span>&gt;</div>
+          <div><span class="cm">// AI 从原型截图还原深色科技风 UI</span></div>
+          <div><span class="kw">const</span> <span style="color:#dcdcaa">ProcessTimeChart</span> = ({ data }) =&gt; {</div>
+          <div>&nbsp;&nbsp;<span class="cm">// SVG+ResizeObserver L型连接线</span></div>
+        </div>
+        <div style="width:110px;padding-left:6px;font-size:7px;color:#88ccdd">
+          <div style="color:#999;font-size:7px;font-weight:700;margin-bottom:2px">Cursor AI Agent</div>
+          <div style="background:#1a2632;padding:2px 4px;border-radius:3px;margin-bottom:2px;border:1px solid rgba(0,212,255,.15)">已识别原型截图：深色科技风，含7个图表模块</div>
+          <div style="background:#1a2632;padding:2px 4px;border-radius:3px;color:#6ee7b7;border:1px solid rgba(16,185,129,.2)">✅ Dashboard 生成完成</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COL 2: Backend + Claude Code Workspace -->
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div class="panel ai" style="flex:1">
+      <div class="panel-tb"><span class="tb tb-cl">◆ Claude Code</span></div>
+      <div class="panel-title"><div class="dot" style="background:var(--blue)"></div><span style="color:var(--blue)">后端系统</span><span style="font-size:9px;color:var(--sub);font-weight:400">Spring Boot 3 · Java 17 · Maven</span></div>
+      <div class="sub">
+        <div class="sub-title" style="color:var(--cyan)">Controller 层 — 纯路由分发</div>
+        <div class="api"><span class="method">GET</span><span class="path">/dashboard/stats | completion-rate | end-reasons</span></div>
+        <div class="api" style="margin-top:2px"><span class="method">GET</span><span class="path">/dashboard/heatmap | process-time | cancel-analysis</span></div>
+        <div style="margin-top:3px;font-size:9px;color:var(--sub)">参数: <span style="color:var(--cyan);font-family:monospace">?siteId&days</span> 返回: <span style="color:var(--green);font-family:monospace">Result&lt;T&gt;</span> <span style="color:var(--dim)">+ days校验(1~365)</span></div>
+      </div>
+      <div class="sub">
+        <div class="sub-title" style="color:var(--blue)">Service 层 — 业务聚合</div>
+        <div class="row">filterOrders(siteId, days) 统一入口</div>
+        <div class="row">热力图归一化 / 高斯分布聚合</div>
+      </div>
+      <div class="sub">
+        <div class="sub-title" style="color:var(--purple)">CloudApiClient 抽象层</div>
+        <div class="g2" style="gap:4px">
+          <div style="padding:4px 6px;background:#020c18;border:1px solid rgba(168,85,247,.3);border-radius:4px;font-size:9px">
+            <div style="color:var(--purple);font-weight:600">MockCloudApiClient</div>
+            <div style="color:var(--sub);margin-top:1px">3站点×30天 ~16,200条</div>
+          </div>
+          <div style="padding:4px 6px;background:#020c18;border:1px solid rgba(59,130,246,.3);border-radius:4px;font-size:9px">
+            <div style="color:var(--blue);font-weight:600">CloudApiClientImpl</div>
+            <div style="color:var(--sub);margin-top:1px">RestTemplate + 超时配置</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:4px 8px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:5px;font-size:9px;display:flex;align-items:center;gap:6px">
+        <span style="color:var(--green);font-weight:600">Result&lt;T&gt;</span>
+        <span style="color:var(--sub)">code · success · data&lt;T&gt;</span>
+        <span style="color:var(--dim)">+ GlobalExceptionHandler</span>
+      </div>
+    </div>
+
+    <!-- Claude Code Workspace Mockup -->
+    <div class="ws-mock">
+      <div class="ws-bar">
+        <div class="d dr"></div><div class="d dy"></div><div class="d dg"></div>
+        <div class="wt">Claude Code — Terminal</div>
+      </div>
+      <div class="ws-body">
+        <div><span class="ws-prompt">$ </span><span class="ws-cmd">claude "规划系统架构，设计API契约"</span></div>
+        <div><span class="ws-ok">━━ 架构方案 ━━</span> <span class="ws-out">Controller → Service → Client 三层</span></div>
+        <div><span class="ws-hl">GET</span> <span class="ws-out">/api/dashboard/stats</span> <span class="ws-warn">→ 总览指标</span></div>
+        <div><span class="ws-prompt">$ </span><span class="ws-cmd">claude "生成Spring Boot骨架 + Mock数据"</span></div>
+        <div><span class="ws-ok">✓ Created</span> <span class="ws-out">pom.xml + 四层包结构 + MockClient</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COL 3: Metadata + API Doc + Cloud + Review -->
+  <div style="display:flex;flex-direction:column;gap:6px">
+
+    <div class="panel ai" style="flex:0 0 auto">
+      <div class="panel-tb"><span class="tb tb-cl">◆ Claude Code</span></div>
+      <div class="panel-title"><div class="dot" style="background:var(--cyan)"></div><span style="color:var(--cyan)">AI 元数据提取</span></div>
+      <div class="sub" style="padding:5px 7px">
+        <div class="sub-title" style="color:var(--purple);margin-bottom:3px">OrderRecord</div>
+        <div class="field"><span class="fn">orderId/siteId</span><span class="ft">String</span><span class="fd">订单/站点</span></div>
+        <div class="field"><span class="fn">daysAgo/dayOfWeek</span><span class="ft">int</span><span class="fd">时间维度</span></div>
+        <div class="field"><span class="fn">endReason</span><span class="ft">String</span><span class="fd">NORMAL/CANCEL…</span></div>
+        <div class="field"><span class="fn">actualKwh</span><span class="ft">double</span><span class="fd">实际充电量</span></div>
+        <div class="field"><span class="fn">userId</span><span class="ft">String</span><span class="fd">用户ID（忠诚度）</span></div>
+        <div class="field"><span class="fn">xxxMinutes</span><span class="ft">int</span><span class="fd">各阶段耗时</span></div>
+        <div style="border-top:1px solid #1a3a5c;margin-top:3px;padding-top:3px">
+          <div style="font-size:9px;color:var(--blue);font-weight:600;margin-bottom:2px">RobotRecord</div>
+          <div class="field"><span class="fn">vin / siteId</span><span class="ft">String</span><span class="fd">VIN + 站点</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="border-color:var(--orange);flex:0 0 auto">
+      <div class="panel-tb"><span class="tb tb-h">👤 人工</span></div>
+      <div class="panel-title"><div class="dot" style="background:var(--orange)"></div><span style="color:var(--orange)">云平台接口文档（AI 输出）</span></div>
+      <div class="api"><span class="method">GET</span><span class="path">/api/orders</span><span class="desc">订单流水</span></div>
+      <div class="api" style="margin-top:2px"><span class="method">GET</span><span class="path">/api/robots</span><span class="desc">机器人状态</span></div>
+      <div class="api" style="margin-top:2px"><span class="method">GET</span><span class="path">/api/sites</span><span class="desc">站点列表</span></div>
+      <div style="display:flex;gap:4px;margin-top:4px">
+        <div style="flex:1;padding:3px 6px;background:#020c18;border-radius:4px;font-size:8px;border:1px solid rgba(249,115,22,.2)">
+          <div style="color:var(--orange);font-weight:600">订单管理</div>
+          <div style="color:var(--dim)">/api/orders</div>
+        </div>
+        <div style="flex:1;padding:3px 6px;background:#020c18;border-radius:4px;font-size:8px;border:1px solid rgba(59,130,246,.2)">
+          <div style="color:var(--blue);font-weight:600">机器人调度</div>
+          <div style="color:var(--dim)">/api/robots</div>
+        </div>
+        <div style="flex:1;padding:3px 6px;background:#020c18;border-radius:4px;font-size:8px;border:1px solid rgba(168,85,247,.2)">
+          <div style="color:var(--purple);font-weight:600">站点管理</div>
+          <div style="color:var(--dim)">/api/sites</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Review Section (NEW) -->
+    <div class="panel" style="border-color:rgba(239,68,68,.4);flex:0 0 auto;background:rgba(239,68,68,.03)">
+      <div class="panel-tb"><span class="tb tb-c">⚡ Cursor</span></div>
+      <div class="panel-title"><div class="dot" style="background:var(--red)"></div><span style="color:var(--red)">AI 代码审查 & 安全加固</span></div>
+      <div style="display:flex;gap:6px">
+        <div class="sub" style="flex:1;padding:5px 7px">
+          <div class="sub-title" style="color:var(--red);font-size:9px;margin-bottom:3px">🔒 P1 高优（6项）</div>
+          <div style="font-size:8px;color:var(--sub);line-height:1.5">
+            ▸ 异常信息泄露阻止<br/>
+            ▸ 数组越界/NPE 防护<br/>
+            ▸ RestTemplate 超时<br/>
+            ▸ days 参数校验(1~365)
+          </div>
+        </div>
+        <div class="sub" style="flex:1;padding:5px 7px">
+          <div class="sub-title" style="color:var(--orange);font-size:9px;margin-bottom:3px">⚠ P2 中优（4项）</div>
+          <div style="font-size:8px;color:var(--sub);line-height:1.5">
+            ▸ 异常处理器顺序<br/>
+            ▸ null data 空响应<br/>
+            ▸ baseUrl 斜杠 trim<br/>
+            ▸ CORS 配置外部化
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tool Comparison (compact) -->
+    <div style="display:flex;gap:4px;flex:0 0 auto">
+      <div style="flex:1;padding:5px 7px;background:rgba(0,122,204,.06);border:1px solid rgba(0,122,204,.2);border-radius:5px">
+        <div style="font-size:8px;font-weight:700;color:#4fc3f7;margin-bottom:2px">⚡ Cursor 负责</div>
+        <div style="font-size:8px;color:var(--sub);line-height:1.5">需求分析 · UI还原 · 前端研发<br/>截图调试 · 代码审查</div>
+      </div>
+      <div style="flex:1;padding:5px 7px;background:rgba(217,119,6,.06);border:1px solid rgba(217,119,6,.2);border-radius:5px">
+        <div style="font-size:8px;font-weight:700;color:#fbbf24;margin-bottom:2px">◆ Claude Code 负责</div>
+        <div style="font-size:8px;color:var(--sub);line-height:1.5">架构规划 · 后端研发 · Mock数据<br/>元数据提取 · 接口文档</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- main-grid -->
+
+<!-- ── Bottom Stats Bar ── -->
+<div class="bottom-bar">
+  <div class="bb-stat"><div class="bb-num" style="color:var(--cyan)">7</div><div class="bb-label">图表模块</div></div>
+  <div class="bb-sep"></div>
+  <div class="bb-stat"><div class="bb-num" style="color:var(--blue)">8</div><div class="bb-label">REST 接口</div></div>
+  <div class="bb-sep"></div>
+  <div class="bb-stat"><div class="bb-num" style="color:var(--green)">3</div><div class="bb-label">云平台对接</div></div>
+  <div class="bb-sep"></div>
+  <div class="bb-stat"><div class="bb-num" style="color:var(--red)">10</div><div class="bb-label">安全修复</div></div>
+  <div class="bb-sep"></div>
+  <div class="bb-stat"><div class="bb-num" style="color:var(--purple)">10x</div><div class="bb-label">效率提升</div></div>
+  <div class="bb-sep"></div>
+  <div class="bb-quote">"AI 不仅能写代码，更能理解需求、设计架构、生成文档、审查安全、驱动全链路研发"</div>
+</div>
+
+</body>
+</html>

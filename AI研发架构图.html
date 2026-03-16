@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<title>AI赋能全链路研发架构图</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050f1e;font-family:'Noto Sans SC',sans-serif;color:#e2e8f0;padding:40px 60px 60px;min-width:1280px}
+
+/* ── Colors ── */
+:root{
+  --cyan:#00d4ff;--blue:#3b82f6;--purple:#a855f7;
+  --green:#10b981;--orange:#f97316;--red:#ef4444;
+  --bg:#050f1e;--card:#0b1f38;--bdr:#1a3a5c;--sub:#94a3b8;--dim:#64748b
+}
+
+/* ── Title ── */
+.page-title{text-align:center;margin-bottom:48px}
+.page-title h1{font-size:36px;font-weight:900;background:linear-gradient(135deg,#fff 0%,var(--cyan) 50%,var(--blue) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.page-title p{font-size:15px;color:var(--sub);letter-spacing:2px}
+
+/* ── Stage Row ── */
+.stage{display:flex;align-items:flex-start;gap:20px;margin-bottom:0;position:relative}
+.stage-num{
+  flex-shrink:0;width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:700;color:#fff;margin-top:4px
+}
+.stage-body{flex:1}
+.stage-label{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.stage-label::after{content:'';flex:1;height:1px;background:var(--bdr)}
+
+/* ── Arrow connector ── */
+.arrow{
+  display:flex;flex-direction:column;align-items:center;
+  margin:0 0 0 20px;padding:6px 0
+}
+.arrow-line{width:2px;flex:1;min-height:20px}
+.arrow-tip{font-size:16px;line-height:1;margin-top:-4px}
+.arrow-label{font-size:11px;padding:3px 10px;border-radius:20px;white-space:nowrap;margin-top:4px}
+
+/* ── Cards ── */
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:20px}
+.card.ai-glow{
+  border-color:var(--cyan);
+  box-shadow:0 0 0 1px rgba(0,212,255,.3),0 0 30px rgba(0,212,255,.12),inset 0 0 30px rgba(0,212,255,.03)
+}
+.card.blue-glow{border-color:var(--blue);box-shadow:0 0 20px rgba(59,130,246,.12)}
+.card.purple-glow{border-color:var(--purple);box-shadow:0 0 20px rgba(168,85,247,.12)}
+.card.green-glow{border-color:var(--green);box-shadow:0 0 20px rgba(16,185,129,.12)}
+
+/* ── Grid layouts ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.col{display:flex;flex-direction:column;gap:12px}
+
+/* ── Tag / Badge ── */
+.tag{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;border:1px solid currentColor}
+.tag-cyan{color:var(--cyan);border-color:rgba(0,212,255,.4);background:rgba(0,212,255,.08)}
+.tag-blue{color:var(--blue);border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.08)}
+.tag-purple{color:var(--purple);border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.08)}
+.tag-green{color:var(--green);border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08)}
+.tag-orange{color:var(--orange);border-color:rgba(249,115,22,.4);background:rgba(249,115,22,.08)}
+
+/* ── Sub-boxes within cards ── */
+.sub-box{background:#020c18;border:1px solid var(--bdr);border-radius:8px;padding:14px}
+.sub-box .title{font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.item-list{display:flex;flex-direction:column;gap:6px}
+.item-list .item{font-size:12px;color:var(--sub);display:flex;align-items:flex-start;gap:6px;line-height:1.5}
+.item-list .item::before{content:'▸';color:var(--cyan);flex-shrink:0;margin-top:1px}
+
+/* ── AI badge ── */
+.ai-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;color:var(--cyan);
+  background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);
+  border-radius:20px;padding:4px 12px
+}
+.ai-badge::before{content:'★';font-size:11px}
+
+/* ── API row ── */
+.api-row{display:flex;align-items:center;gap:12px;padding:7px 12px;background:#020c18;border-radius:6px;border:1px solid var(--bdr)}
+.api-method{font-size:11px;font-weight:700;color:#fff;background:var(--blue);padding:2px 8px;border-radius:4px;flex-shrink:0;font-family:monospace}
+.api-path{font-size:12px;font-family:monospace;color:var(--cyan)}
+.api-desc{font-size:12px;color:var(--sub);margin-left:auto}
+
+/* ── Metadata field ── */
+.field{display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid #0d1f30}
+.field:last-child{border-bottom:none}
+.field-name{font-size:12px;font-family:monospace;color:var(--cyan);width:120px;flex-shrink:0}
+.field-type{font-size:11px;color:var(--purple);font-family:monospace;width:60px;flex-shrink:0}
+.field-desc{font-size:11px;color:var(--sub)}
+
+/* ── Connector between frontend & backend ── */
+.system-connector{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  margin:12px 0;padding:12px 20px;background:#020c18;border-radius:8px;
+  border:1px solid var(--bdr)
+}
+.connector-label{font-size:12px;color:var(--sub)}
+.connector-arrow{color:var(--cyan);font-size:16px}
+
+/* ── Cloud platform ── */
+.cloud-system{
+  background:linear-gradient(135deg,rgba(5,15,30,1) 0%,rgba(11,31,56,1) 100%);
+  border:1px solid var(--bdr);border-radius:12px;padding:16px;
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px
+}
+
+/* ── Final system ── */
+.final-box{
+  background:linear-gradient(135deg,rgba(0,212,255,.06) 0%,rgba(59,130,246,.06) 100%);
+  border:1px solid var(--cyan);border-radius:16px;padding:28px;text-align:center;
+  box-shadow:0 0 40px rgba(0,212,255,.1)
+}
+
+/* ── Accent line at top ── */
+.top-line{height:4px;border-radius:2px;margin-bottom:12px}
+.top-cyan{background:linear-gradient(90deg,var(--cyan),transparent)}
+.top-blue{background:linear-gradient(90deg,var(--blue),transparent)}
+.top-purple{background:linear-gradient(90deg,var(--purple),transparent)}
+.top-green{background:linear-gradient(90deg,var(--green),transparent)}
+.top-orange{background:linear-gradient(90deg,var(--orange),transparent)}
+
+/* ── Title row ── */
+.card-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+/* Misc */
+small{font-size:11px;color:var(--dim)}
+b{font-weight:600}
+.text-cyan{color:var(--cyan)}
+.text-blue{color:var(--blue)}
+.text-purple{color:var(--purple)}
+.text-green{color:var(--green)}
+.text-orange{color:var(--orange)}
+</style>
+</head>
+<body>
+
+<!-- ══ PAGE TITLE ══ -->
+<div class="page-title">
+  <div style="margin-bottom:12px">
+    <span class="ai-badge" style="font-size:14px;padding:6px 18px">AI 赋能全链路研发</span>
+  </div>
+  <h1>移动储能机器人运营中心 · 系统研发架构图</h1>
+  <p>从需求输入 → AI分析 → 系统研发 → 接口设计 → 云平台对接 → 完整交付</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     STAGE 1: 输入层
+══════════════════════════════════════════ -->
+<div class="stage">
+  <div class="stage-num" style="background:var(--bdr)">1</div>
+  <div class="stage-body">
+    <div class="stage-label" style="color:var(--sub)">输入层 · INPUT</div>
+    <div class="grid-2" style="gap:20px">
+      <div class="card">
+        <div class="top-line top-blue"></div>
+        <div class="card-title"><span class="tag tag-blue">需求文档</span></div>
+        <div class="item-list">
+          <div class="item">订单分析报表.docx — 业务需求描述</div>
+          <div class="item">7个核心看板图表需求定义</div>
+          <div class="item">完单率、热力图、流程耗时等</div>
+          <div class="item">站点筛选、时间维度分析</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="top-line top-purple"></div>
+        <div class="card-title"><span class="tag tag-purple">原型 UI 截图</span></div>
+        <div class="item-list">
+          <div class="item">运营中心大盘原型图（高保真截图）</div>
+          <div class="item">深色科技风布局规范</div>
+          <div class="item">图表类型、颜色、尺寸规范</div>
+          <div class="item">Header / Card / Chart 组件结构</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARROW -->
+<div class="arrow" style="margin-left:60px">
+  <div class="arrow-line" style="background:linear-gradient(var(--bdr),var(--cyan));height:28px"></div>
+  <div class="arrow-tip text-cyan">▼</div>
+  <div class="arrow-label ai-badge" style="margin-top:6px">AI 读取并理解输入</div>
+  <div class="arrow-line" style="background:linear-gradient(var(--cyan),var(--bdr));height:20px"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     STAGE 2: AI 智能分析层
+══════════════════════════════════════════ -->
+<div class="stage" style="margin-top:0">
+  <div class="stage-num" style="background:var(--cyan);color:#050f1e">2</div>
+  <div class="stage-body">
+    <div class="stage-label" style="color:var(--cyan)">AI 智能分析层 · AI ANALYSIS CORE</div>
+    <div class="card ai-glow" style="padding:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="font-size:18px;font-weight:700;color:#fff">AI 智能分析引擎
+          <span style="font-size:13px;font-weight:400;color:var(--sub);margin-left:12px">Cursor Agent + Claude 大模型</span>
+        </div>
+        <span class="ai-badge">多模态理解</span>
+      </div>
+      <div class="grid-3" style="gap:16px">
+        <div class="sub-box">
+          <div class="title text-cyan">◈ 需求理解与分析</div>
+          <div class="item-list">
+            <div class="item">解析业务文档语义</div>
+            <div class="item">识别图表类型和数据维度</div>
+            <div class="item">提取字段定义与计算逻辑</div>
+            <div class="item">规划功能优先级与范围</div>
+          </div>
+        </div>
+        <div class="sub-box">
+          <div class="title text-blue">◈ 原型 UI 解读还原</div>
+          <div class="item-list">
+            <div class="item">识别截图中的布局结构</div>
+            <div class="item">提取颜色规范与间距</div>
+            <div class="item">识别缺失的图表模块</div>
+            <div class="item">匹配 ECharts 图表类型</div>
+          </div>
+        </div>
+        <div class="sub-box">
+          <div class="title text-purple">◈ 系统架构规划</div>
+          <div class="item-list">
+            <div class="item">前后端技术栈选型</div>
+            <div class="item">工程结构设计</div>
+            <div class="item">API 接口契约设计</div>
+            <div class="item">数据流与分层规范</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARROW -->
+<div class="arrow" style="margin-left:60px">
+  <div class="arrow-line" style="background:linear-gradient(var(--bdr),var(--blue));height:28px"></div>
+  <div class="arrow-tip text-blue">▼</div>
+  <div class="arrow-label" style="background:rgba(59,130,246,.1);border:1px solid var(--blue);color:var(--blue);border-radius:20px;padding:3px 12px;font-size:11px;margin-top:6px">AI 自动生成工程骨架与配置</div>
+  <div class="arrow-line" style="background:linear-gradient(var(--blue),var(--bdr));height:16px"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     STAGE 3: 系统架构生成
+══════════════════════════════════════════ -->
+<div class="stage" style="margin-top:0">
+  <div class="stage-num" style="background:var(--blue)">3</div>
+  <div class="stage-body">
+    <div class="stage-label" style="color:var(--blue)">系统架构生成 · SYSTEM SCAFFOLD</div>
+    <div class="grid-2" style="gap:20px">
+      <div class="card blue-glow">
+        <div class="top-line top-cyan"></div>
+        <div class="card-title text-cyan">前端工程 <small style="color:var(--sub)">AI 生成完整工程配置</small></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="tag tag-cyan">React 18</span>
+          <span class="tag tag-blue">Vite 5</span>
+          <span class="tag tag-cyan">ECharts 5</span>
+          <span class="tag tag-blue">Tailwind CSS</span>
+          <span class="tag tag-cyan">Axios</span>
+          <span class="tag tag-blue">lucide-react</span>
+        </div>
+        <div class="item-list">
+          <div class="item">vite.config.js — 构建配置 + API 代理</div>
+          <div class="item">tailwind.config.js + postcss.config.js</div>
+          <div class="item">index.html + src/main.jsx 入口文件</div>
+          <div class="item">src/index.css — Tailwind 基础样式</div>
+        </div>
+      </div>
+      <div class="card blue-glow">
+        <div class="top-line top-blue"></div>
+        <div class="card-title text-blue">后端工程 <small style="color:var(--sub)">AI 生成 Maven 骨架</small></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="tag tag-blue">Spring Boot 3.2</span>
+          <span class="tag tag-cyan">Java 17</span>
+          <span class="tag tag-blue">Maven</span>
+          <span class="tag tag-cyan">Lombok</span>
+        </div>
+        <div class="item-list">
+          <div class="item">pom.xml — 依赖管理（移除无用 JPA/MySQL）</div>
+          <div class="item">application.properties — 端口与配置项</div>
+          <div class="item">DashboardApplication.java — 启动类</div>
+          <div class="item">标准包结构：controller / service / client / common</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARROW -->
+<div class="arrow" style="margin-left:60px">
+  <div class="arrow-line" style="background:linear-gradient(var(--bdr),var(--cyan));height:28px"></div>
+  <div class="arrow-tip text-cyan">▼</div>
+  <div class="arrow-label ai-badge" style="margin-top:6px">AI 驱动功能代码生成</div>
+  <div class="arrow-line" style="background:linear-gradient(var(--cyan),var(--bdr));height:16px"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     STAGE 4: 前后端研发
+══════════════════════════════════════════ -->
+<div class="stage" style="margin-top:0">
+  <div class="stage-num" style="background:var(--cyan);color:#050f1e">4</div>
+  <div class="stage-body">
+    <div class="stage-label" style="color:var(--cyan)">AI 驱动全栈研发 · FULL-STACK DEVELOPMENT</div>
+
+    <div class="grid-2" style="gap:20px">
+
+      <!-- Frontend -->
+      <div class="card ai-glow" style="padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title text-cyan" style="margin-bottom:0">前端 Dashboard</div>
+          <span class="ai-badge" style="font-size:11px">AI 原型还原</span>
+        </div>
+        <!-- UI Components -->
+        <div class="sub-box" style="margin-bottom:10px">
+          <div class="title text-cyan">页面组件</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="tag tag-cyan" style="font-size:11px">Header + 筛选器</span>
+            <span class="tag tag-cyan" style="font-size:11px">StatCard ×3</span>
+            <span class="tag tag-cyan" style="font-size:11px">ChartCard 卡片容器</span>
+          </div>
+        </div>
+        <!-- Charts -->
+        <div class="sub-box" style="margin-bottom:10px">
+          <div class="title text-blue">ECharts 图表组件（7个）</div>
+          <div class="grid-2" style="gap:6px">
+            <div style="font-size:11px;color:var(--sub);padding:4px 8px;background:#020c18;border-radius:5px;border:1px solid var(--bdr)">
+              <span style="color:var(--cyan)">◉</span> 完单率环形图
+            </div>
+            <div style="font-size:11px;color:var(--sub);padding:4px 8px;background:#020c18;border-radius:5px;border:1px solid var(--bdr)">
+              <span style="color:var(--blue)">◉</span> 结束原因饼图
+            </div>
+            <div style="font-size:11px;color:var(--sub);padding:4px 8px;background:#020c18;border-radius:5px;border:1px solid var(--bdr)">
+              <span style="color:var(--orange)">◉</span> 24h热力图（双层）
+            </div>
+            <div style="font-size:11px;color:var(--sub);padding:4px 8px;background:#020c18;border-radius:5px;border:1px solid var(--bdr)">
+              <span style="color:var(--green)">◉</span> 流程耗时堆叠条
+            </div>
+            <div style="font-size:11px;color:var(--sub);padding:4px 8px;background:#020c18;border-radius:5px;border:1px solid var(--bdr)">
+              <span style="color:var(--purple)">◉</span> 取消分析饼图
+            </div>
+            <div style="font-size:11px;color:var(--sub);padding:4px 8px;background:#020c18;border-radius:5px;border:1px solid var(--bdr)">
+              <span style="color:var(--blue)">◉</span> 用户频次柱状图
+            </div>
+          </div>
+        </div>
+        <!-- Service Layer -->
+        <div class="sub-box">
+          <div class="title text-purple">服务 & 状态层</div>
+          <div class="item-list">
+            <div class="item">api.js — Axios 实例 + buildParams 构造器</div>
+            <div class="item">响应拦截器 — 统一解包 Result&lt;T&gt;</div>
+            <div class="item">useState(siteId, days) — 筛选状态</div>
+            <div class="item">useEffect([siteId,days]) — 联动刷新</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backend -->
+      <div class="card ai-glow" style="padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="card-title text-blue" style="margin-bottom:0">后端 API 服务</div>
+          <span class="ai-badge" style="font-size:11px">AI MVC 分层</span>
+        </div>
+        <!-- Controller -->
+        <div class="sub-box" style="margin-bottom:10px">
+          <div class="title text-cyan">Controller 层 — 纯路由分发</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+            <span style="font-size:11px;color:var(--dim)">@RequestParam siteId</span>
+            <span style="font-size:11px;color:var(--dim)">@RequestParam days</span>
+            <span style="font-size:11px;color:var(--green)">Result&lt;T&gt;</span>
+          </div>
+          <div class="item-list">
+            <div class="item"><b style="color:var(--cyan)">GET</b> /api/dashboard/sites | stats | completion-rate</div>
+            <div class="item"><b style="color:var(--cyan)">GET</b> /api/dashboard/heatmap | process-time</div>
+            <div class="item"><b style="color:var(--cyan)">GET</b> /api/dashboard/end-reasons | cancel-analysis | user-frequency</div>
+          </div>
+        </div>
+        <!-- Service -->
+        <div class="sub-box" style="margin-bottom:10px">
+          <div class="title text-blue">Service 层 — 业务聚合计算</div>
+          <div class="item-list">
+            <div class="item">filterOrders(siteId, days) — 统一筛选入口</div>
+            <div class="item">归一化热力图、高斯双峰数据聚合</div>
+            <div class="item">用户忠诚度分桶（1次/2次/3-5次/&gt;5次）</div>
+          </div>
+        </div>
+        <!-- Client -->
+        <div class="sub-box">
+          <div class="title text-purple">CloudApiClient 抽象层</div>
+          <div class="grid-2" style="gap:8px">
+            <div style="padding:8px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.3);border-radius:6px;font-size:11px">
+              <div style="color:var(--purple);font-weight:600;margin-bottom:4px">MockCloudApiClient</div>
+              <div style="color:var(--sub)">3站点×30天×~180单<br/>高斯分布仿真数据</div>
+            </div>
+            <div style="padding:8px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.3);border-radius:6px;font-size:11px">
+              <div style="color:var(--blue);font-weight:600;margin-bottom:4px">CloudApiClientImpl</div>
+              <div style="color:var(--sub)">RestTemplate HTTP调用<br/>cloud.api.mock=false 激活</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Common module -->
+    <div class="card" style="margin-top:12px;padding:16px">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:600;color:var(--green)">公共模块 common</span>
+        <div style="flex:1;display:flex;gap:10px;flex-wrap:wrap">
+          <div style="padding:8px 14px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:8px;font-size:12px">
+            <span style="color:var(--green);font-weight:600">Result&lt;T&gt;</span>
+            <span style="color:var(--sub);margin-left:8px">code · success · msg · msgDetail · data · timestamp</span>
+          </div>
+          <div style="padding:8px 14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:12px">
+            <span style="color:var(--red);font-weight:600">GlobalExceptionHandler</span>
+            <span style="color:var(--sub);margin-left:8px">统一异常封装，400/500 自动兜底</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARROW -->
+<div class="arrow" style="margin-left:60px">
+  <div class="arrow-line" style="background:linear-gradient(var(--bdr),var(--green));height:24px"></div>
+  <div class="arrow-tip text-green">▼</div>
+  <div class="arrow-label" style="background:rgba(16,185,129,.1);border:1px solid var(--green);color:var(--green);border-radius:20px;padding:3px 12px;font-size:11px;margin-top:6px">Vite Proxy 转发 · siteId/days 参数传递</div>
+  <div class="arrow-line" style="background:linear-gradient(var(--green),var(--bdr));height:16px"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     STAGE 5: 前后端接口联调
+══════════════════════════════════════════ -->
+<div class="stage" style="margin-top:0">
+  <div class="stage-num" style="background:var(--green)">5</div>
+  <div class="stage-body">
+    <div class="stage-label" style="color:var(--green)">前后端接口联调 · API INTEGRATION</div>
+    <div class="card green-glow">
+      <div style="display:flex;gap:20px;align-items:stretch">
+        <div style="flex:1">
+          <div class="card-title text-cyan" style="font-size:13px">接口契约（8个 REST 端点）</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="api-row"><span class="api-method">GET</span><span class="api-path">/api/dashboard/sites</span><span class="api-desc">站点列表</span></div>
+            <div class="api-row"><span class="api-method">GET</span><span class="api-path">/api/dashboard/stats</span><span class="api-desc">总览指标</span></div>
+            <div class="api-row"><span class="api-method">GET</span><span class="api-path">/api/dashboard/completion-rate</span><span class="api-desc">完单率</span></div>
+            <div class="api-row"><span class="api-method">GET</span><span class="api-path">/api/dashboard/end-reasons</span><span class="api-desc">结束原因分布</span></div>
+            <div class="api-row"><span class="api-method">GET</span><span class="api-path">/api/dashboard/heatmap</span><span class="api-desc">24h热力分布</span></div>
+            <div class="api-row"><span class="api-method">GET</span><span class="api-path">/api/dashboard/process-time</span><span class="api-desc">流程耗时</span></div>
+            <div class="api-row"><span class="api-method">GET</span><span class="api-path">/api/dashboard/cancel-analysis</span><span class="api-desc">取消分析</span></div>
+            <div class="api-row"><span class="api-method">GET</span><span class="api-path">/api/dashboard/user-frequency</span><span class="api-desc">用户频次</span></div>
+          </div>
+        </div>
+        <div style="width:1px;background:var(--bdr)"></div>
+        <div style="width:280px;flex-shrink:0">
+          <div class="card-title text-green" style="font-size:13px">统一请求/响应规范</div>
+          <div class="sub-box">
+            <div style="font-size:11px;color:var(--sub);margin-bottom:8px">公共查询参数</div>
+            <div style="font-size:12px;font-family:monospace;color:var(--cyan)">?siteId=S001&amp;days=7</div>
+          </div>
+          <div class="sub-box" style="margin-top:8px">
+            <div style="font-size:11px;color:var(--sub);margin-bottom:8px">统一响应格式 Result&lt;T&gt;</div>
+            <div style="font-size:11px;font-family:monospace;color:var(--dim);line-height:1.8">
+              {<br>
+              &nbsp;&nbsp;<span style="color:var(--blue)">"code"</span>: <span style="color:var(--green)">200</span>,<br>
+              &nbsp;&nbsp;<span style="color:var(--blue)">"success"</span>: <span style="color:var(--green)">true</span>,<br>
+              &nbsp;&nbsp;<span style="color:var(--blue)">"msg"</span>: <span style="color:var(--orange)">"操作成功"</span>,<br>
+              &nbsp;&nbsp;<span style="color:var(--blue)">"data"</span>: <span style="color:var(--cyan)">T</span>,<br>
+              &nbsp;&nbsp;<span style="color:var(--blue)">"timestamp"</span>: <span style="color:var(--green)">long</span><br>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARROW -->
+<div class="arrow" style="margin-left:60px">
+  <div class="arrow-line" style="background:linear-gradient(var(--bdr),var(--cyan));height:24px"></div>
+  <div class="arrow-tip text-cyan">▼</div>
+  <div class="arrow-label ai-badge" style="margin-top:6px">AI 从 DTO 模型中提取元数据，设计云平台接口规范</div>
+  <div class="arrow-line" style="background:linear-gradient(var(--cyan),var(--bdr));height:16px"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     STAGE 6: AI元数据提取 + 接口文档
+══════════════════════════════════════════ -->
+<div class="stage" style="margin-top:0">
+  <div class="stage-num" style="background:var(--cyan);color:#050f1e">6</div>
+  <div class="stage-body">
+    <div class="stage-label" style="color:var(--cyan)">AI 元数据提取与接口文档设计 · METADATA → API DESIGN</div>
+    <div class="card ai-glow" style="padding:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="font-size:15px;font-weight:700;color:#fff">AI 基于 Dashboard 数据模型，提取关键元数据并设计云平台接口规范</div>
+        <span class="ai-badge">元数据驱动</span>
+      </div>
+      <div class="grid-2" style="gap:20px">
+
+        <!-- Metadata Column -->
+        <div>
+          <div class="card-title text-purple" style="font-size:13px">DTO 元数据模型（AI 提取）</div>
+          <div class="sub-box" style="margin-bottom:10px">
+            <div class="title text-cyan">OrderRecord — 订单原始记录</div>
+            <div class="field"><span class="field-name">orderId</span><span class="field-type">String</span><span class="field-desc">订单唯一标识</span></div>
+            <div class="field"><span class="field-name">siteId</span><span class="field-type">String</span><span class="field-desc">所属站点 ID</span></div>
+            <div class="field"><span class="field-name">daysAgo</span><span class="field-type">int</span><span class="field-desc">距今天数（0=今天）</span></div>
+            <div class="field"><span class="field-name">dayOfWeek</span><span class="field-type">int</span><span class="field-desc">星期几（0=Mon）</span></div>
+            <div class="field"><span class="field-name">timeSlot</span><span class="field-type">int</span><span class="field-desc">半小时时间槽 0-47</span></div>
+            <div class="field"><span class="field-name">endReason</span><span class="field-type">String</span><span class="field-desc">NORMAL / USER_CANCEL / ROBOT_FAILURE …</span></div>
+            <div class="field"><span class="field-name">estimatedKwh</span><span class="field-type">double</span><span class="field-desc">预估充电量（kWh）</span></div>
+            <div class="field"><span class="field-name">actualKwh</span><span class="field-type">double</span><span class="field-desc">实际充电量（kWh）</span></div>
+            <div class="field"><span class="field-name">userId</span><span class="field-type">String</span><span class="field-desc">用户 ID（忠诚度分析）</span></div>
+            <div class="field"><span class="field-name">responseMinutes</span><span class="field-type">int</span><span class="field-desc">响应耗时（分钟）</span></div>
+            <div class="field"><span class="field-name">chargeMinutes</span><span class="field-type">int</span><span class="field-desc">充电耗时（分钟）</span></div>
+            <div class="field"><span class="field-name">cancelMinutes</span><span class="field-type">int</span><span class="field-desc">取消等待时长</span></div>
+          </div>
+          <div class="sub-box">
+            <div class="title text-blue">RobotRecord — 机器人状态</div>
+            <div class="field"><span class="field-name">robotId</span><span class="field-type">String</span><span class="field-desc">机器人唯一标识</span></div>
+            <div class="field"><span class="field-name">siteId</span><span class="field-type">String</span><span class="field-desc">所属站点</span></div>
+            <div class="field"><span class="field-name">active</span><span class="field-type">boolean</span><span class="field-desc">是否运营中</span></div>
+          </div>
+        </div>
+
+        <!-- API Docs Column -->
+        <div>
+          <div class="card-title text-green" style="font-size:13px">云平台接口文档（AI 设计输出）</div>
+          <div class="sub-box" style="margin-bottom:10px">
+            <div class="title text-cyan">GET /api/orders — 订单数据</div>
+            <div style="margin-bottom:8px">
+              <div style="font-size:11px;color:var(--sub);margin-bottom:4px">请求参数</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <span style="font-size:11px;font-family:monospace;color:var(--cyan);background:#020c18;padding:2px 8px;border-radius:4px">siteId: String</span>
+                <span style="font-size:11px;font-family:monospace;color:var(--cyan);background:#020c18;padding:2px 8px;border-radius:4px">startDate: Date</span>
+                <span style="font-size:11px;font-family:monospace;color:var(--cyan);background:#020c18;padding:2px 8px;border-radius:4px">endDate: Date</span>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--sub);margin-bottom:4px">响应</div>
+            <div style="font-size:11px;font-family:monospace;color:var(--dim)">Result&lt;List&lt;OrderRecord&gt;&gt;</div>
+          </div>
+          <div class="sub-box" style="margin-bottom:10px">
+            <div class="title text-blue">GET /api/robots — 机器人状态</div>
+            <div style="margin-bottom:8px">
+              <div style="font-size:11px;color:var(--sub);margin-bottom:4px">请求参数</div>
+              <span style="font-size:11px;font-family:monospace;color:var(--cyan);background:#020c18;padding:2px 8px;border-radius:4px">siteId: String</span>
+            </div>
+            <div style="font-size:11px;color:var(--sub);margin-bottom:4px">响应</div>
+            <div style="font-size:11px;font-family:monospace;color:var(--dim)">Result&lt;List&lt;RobotRecord&gt;&gt;</div>
+          </div>
+          <div class="sub-box">
+            <div class="title text-purple">GET /api/sites — 站点列表</div>
+            <div style="font-size:11px;color:var(--sub);margin-bottom:4px">无需参数</div>
+            <div style="font-size:11px;font-family:monospace;color:var(--dim)">Result&lt;List&lt;{id, name}&gt;&gt;</div>
+          </div>
+          <div style="margin-top:12px;padding:12px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:8px">
+            <div style="font-size:12px;color:var(--cyan);font-weight:600;margin-bottom:6px">接口文档特性</div>
+            <div class="item-list">
+              <div class="item">字段类型、必填项、枚举值完整定义</div>
+              <div class="item">endReason 枚举值文档化</div>
+              <div class="item">时间字段格式规范（ISO 8601）</div>
+              <div class="item">错误码与响应示例</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARROW -->
+<div class="arrow" style="margin-left:60px">
+  <div class="arrow-line" style="background:linear-gradient(var(--bdr),var(--orange));height:24px"></div>
+  <div class="arrow-tip text-orange">▼</div>
+  <div class="arrow-label" style="background:rgba(249,115,22,.1);border:1px solid var(--orange);color:var(--orange);border-radius:20px;padding:3px 12px;font-size:11px;margin-top:6px">接口文档交付给云平台团队进行传统开发</div>
+  <div class="arrow-line" style="background:linear-gradient(var(--orange),var(--bdr));height:16px"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     STAGE 7: 云平台传统开发
+══════════════════════════════════════════ -->
+<div class="stage" style="margin-top:0">
+  <div class="stage-num" style="background:var(--orange)">7</div>
+  <div class="stage-body">
+    <div class="stage-label" style="color:var(--orange)">云平台传统接口开发 · CLOUD PLATFORM DEVELOPMENT</div>
+    <div class="card" style="border-color:rgba(249,115,22,.3)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="card-title text-orange" style="margin-bottom:0">充电云平台（已有系统，传统开发团队按接口文档实现）</div>
+        <span style="font-size:11px;color:var(--dim)">cloud.api.mock=false 后生效</span>
+      </div>
+      <div class="grid-3" style="gap:16px">
+        <div class="cloud-system">
+          <div style="font-size:13px;font-weight:600;color:var(--cyan)">订单管理系统</div>
+          <div style="font-size:12px;color:var(--sub);margin:6px 0">实现接口</div>
+          <div style="font-family:monospace;font-size:11px;color:var(--cyan);background:#020c18;padding:4px 10px;border-radius:4px">GET /api/orders</div>
+          <div style="font-size:11px;color:var(--dim);margin-top:6px">返回充电订单流水<br/>含耗时、结束原因、kWh</div>
+        </div>
+        <div class="cloud-system">
+          <div style="font-size:13px;font-weight:600;color:var(--blue)">机器人调度系统</div>
+          <div style="font-size:12px;color:var(--sub);margin:6px 0">实现接口</div>
+          <div style="font-family:monospace;font-size:11px;color:var(--blue);background:#020c18;padding:4px 10px;border-radius:4px">GET /api/robots</div>
+          <div style="font-size:11px;color:var(--dim);margin-top:6px">返回机器人状态列表<br/>含 siteId、active 状态</div>
+        </div>
+        <div class="cloud-system">
+          <div style="font-size:13px;font-weight:600;color:var(--purple)">站点管理系统</div>
+          <div style="font-size:12px;color:var(--sub);margin:6px 0">实现接口</div>
+          <div style="font-family:monospace;font-size:11px;color:var(--purple);background:#020c18;padding:4px 10px;border-radius:4px">GET /api/sites</div>
+          <div style="font-size:11px;color:var(--dim);margin-top:6px">返回站点列表<br/>含 id、name、location</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARROW -->
+<div class="arrow" style="margin-left:60px">
+  <div class="arrow-line" style="background:linear-gradient(var(--bdr),var(--cyan));height:24px"></div>
+  <div class="arrow-tip text-cyan">▼</div>
+  <div class="arrow-label ai-badge" style="margin-top:6px">AI 辅助对接联调，切换 cloud.api.mock=false</div>
+  <div class="arrow-line" style="background:linear-gradient(var(--cyan),var(--bdr));height:16px"></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     STAGE 8: 完整交付
+══════════════════════════════════════════ -->
+<div class="stage" style="margin-top:0">
+  <div class="stage-num" style="background:linear-gradient(135deg,var(--cyan),var(--blue));color:#050f1e">8</div>
+  <div class="stage-body">
+    <div class="stage-label" style="color:var(--cyan)">系统交付 · FINAL DELIVERY</div>
+    <div class="final-box">
+      <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:8px">移动储能机器人运营中心 — 独立系统研发完成</div>
+      <div style="font-size:14px;color:var(--sub);margin-bottom:24px">前后端全栈系统 · 云平台对接 · 全链路贯通</div>
+      <div class="grid-4" style="margin-bottom:24px">
+        <div style="text-align:center;padding:16px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:10px">
+          <div style="font-size:28px;font-weight:900;color:var(--cyan)">7</div>
+          <div style="font-size:12px;color:var(--sub)">图表模块</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:10px">
+          <div style="font-size:28px;font-weight:900;color:var(--blue)">8</div>
+          <div style="font-size:12px;color:var(--sub)">REST 接口</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px">
+          <div style="font-size:28px;font-weight:900;color:var(--green)">3</div>
+          <div style="font-size:12px;color:var(--sub)">云平台系统对接</div>
+        </div>
+        <div style="text-align:center;padding:16px;background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:10px">
+          <div style="font-size:28px;font-weight:900;color:var(--purple)">10x</div>
+          <div style="font-size:12px;color:var(--sub)">研发效率提升</div>
+        </div>
+      </div>
+      <div style="font-size:15px;font-weight:600;color:var(--cyan)">
+        "AI 不仅能写代码，更能理解需求、设计架构、生成文档、驱动全链路研发"
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AI能力总结栏 ══ -->
+<div style="margin-top:40px;padding:28px;background:linear-gradient(135deg,rgba(0,212,255,.06),rgba(59,130,246,.06));border:1px solid rgba(0,212,255,.2);border-radius:16px">
+  <div style="text-align:center;margin-bottom:20px">
+    <span class="ai-badge" style="font-size:14px;padding:6px 20px">贯穿全程的 AI 核心能力</span>
+  </div>
+  <div class="grid-4" style="gap:16px">
+    <div style="text-align:center;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:6px">多模态理解</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.7">读取原型截图<br/>解析需求文档<br/>识别 UI 布局</div>
+    </div>
+    <div style="text-align:center;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--blue);margin-bottom:6px">全栈代码生成</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.7">工程配置生成<br/>前后端代码生成<br/>保持风格一致</div>
+    </div>
+    <div style="text-align:center;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:6px">元数据提取</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.7">识别数据结构<br/>设计字段契约<br/>生成接口文档</div>
+    </div>
+    <div style="text-align:center;padding:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:6px">截图驱动调试</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.7">截图反馈 Bug<br/>精准定位修复<br/>分钟级迭代</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

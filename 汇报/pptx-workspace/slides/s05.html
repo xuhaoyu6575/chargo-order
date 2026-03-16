@@ -1,0 +1,88 @@
+<!DOCTYPE html><html><head><style>
+html { background: #020617; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  font-family: Arial, sans-serif; color: #f8fafc;
+  display: flex; flex-direction: column;
+  background: #020617;
+}
+.accent { position: absolute; top: 0; left: 0; width: 720pt; height: 3pt; background: #0ea5e9; }
+.content { flex: 1; display: flex; flex-direction: column; padding: 32pt 40pt 24pt 40pt; }
+.content-center { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 32pt 40pt 24pt 40pt; text-align: center; }
+h1 { font-size: 32pt; font-weight: 800; color: #0ea5e9; margin: 0 0 8pt 0; font-family: Impact, Arial, sans-serif; letter-spacing: 1px; }
+h2 { font-size: 22pt; font-weight: 700; color: #0ea5e9; margin: 0 0 6pt 0; }
+h3 { font-size: 14pt; font-weight: 700; margin: 0 0 4pt 0; }
+h4 { font-size: 12pt; font-weight: 700; margin: 0 0 3pt 0; }
+p { font-size: 11pt; color: #cbd5e1; margin: 0 0 4pt 0; line-height: 1.5; }
+ul { margin: 0; padding-left: 16pt; }
+li { font-size: 10pt; color: #cbd5e1; margin-bottom: 3pt; line-height: 1.4; }
+.row { display: flex; gap: 12pt; }
+.col { flex: 1; display: flex; flex-direction: column; }
+.card { background: #0f172a; border: 1px solid #1e293b; padding: 12pt; border-left: 3pt solid #0ea5e9; position: relative; }
+.card-glow { background: #0f172a; border: 1px solid #0ea5e9; padding: 12pt; position: relative; box-shadow: inset 0 0 10pt rgba(14,165,233,0.1); }
+.card::before, .card-glow::before { content: ""; position: absolute; top: -1px; left: -1px; width: 6pt; height: 6pt; border-top: 2px solid #0ea5e9; border-left: 2px solid #0ea5e9; }
+.card::after, .card-glow::after { content: ""; position: absolute; bottom: -1px; right: -1px; width: 6pt; height: 6pt; border-bottom: 2px solid #0ea5e9; border-right: 2px solid #0ea5e9; }
+.sub-box { background: #000000; border: 1px solid #1e293b; padding: 8pt; margin-top: 4pt; border-left: 2px solid #8b5cf6; }
+.badge { display: inline-block; font-size: 8pt; font-weight: 700; padding: 2pt 8pt; border-radius: 0; text-transform: uppercase; letter-spacing: 1px; }
+.badge-cyan { color: #0ea5e9; }
+.badge-orange { color: #f59e0b; }
+.badge-purple { color: #8b5cf6; }
+.badge-bg-cyan { background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.7); padding: 2pt 8pt; display: inline-block; }
+.badge-bg-orange { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.7); padding: 2pt 8pt; display: inline-block; }
+.badge-bg-purple { background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.7); padding: 2pt 8pt; display: inline-block; }
+.tag-wrap { display: inline-block; padding: 1pt 6pt; border-radius: 0; border: 1px solid currentColor; margin-right: 4pt; }
+.tag { font-size: 8pt; font-weight: 600; text-transform: uppercase; font-family: "Courier New", Courier, monospace;}
+.section-num { position: absolute; top: 12pt; right: 40pt; font-size: 56pt; font-weight: 800; color: rgba(14,165,233,0.06); font-family: Impact, Arial, sans-serif; }
+.stat-num { font-size: 32pt; font-weight: 800; font-family: Impact, Arial, sans-serif; text-shadow: 0 0 10pt currentColor; }
+.text-cyan { color: #0ea5e9; } .text-blue { color: #3b82f6; } .text-purple { color: #8b5cf6; }
+.text-green { color: #10b981; } .text-orange { color: #f59e0b; } .text-red { color: #ef4444; }
+.text-dim { color: #64748b; } .text-white { color: #ffffff; }
+.small { font-size: 9pt; } .tiny { font-size: 8pt; }
+</style></head><body>
+<div class="accent"></div>
+<div class="content">
+    <p class="section-num">04</p>
+    <div style="display:flex;align-items:center;gap:8pt;margin-bottom:8pt">
+      <h2 style="margin:0">AI 智能分析</h2>
+      <div class="badge-bg-cyan"><p class="badge badge-cyan">Cursor</p></div>
+    </div>
+    <div class="row" style="flex:1">
+      <div class="col" style="gap:6pt">
+        <div class="card-glow" style="flex:1">
+          <h4 class="text-cyan">需求理解与分析</h4>
+          <ul>
+            <li>解析业务文档语义，提取 7 大图表需求</li>
+            <li>识别数据维度（站点/时间/用户/订单）</li>
+            <li>提取字段定义与计算逻辑</li>
+            <li>规划功能优先级与范围</li>
+          </ul>
+        </div>
+        <div class="card-glow" style="flex:1">
+          <h4 class="text-blue">原型 UI 解读还原</h4>
+          <ul>
+            <li>识别截图中的深色科技风布局结构</li>
+            <li>提取颜色规范 (#050f1e) 与间距</li>
+            <li>匹配 ECharts 图表类型</li>
+            <li>还原电路板纹理背景效果</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col" style="gap:4pt">
+        <p class="tiny" style="font-weight:600;color:#64748b">关键输出物</p>
+        <div style="display:flex;gap:4pt;flex-wrap:wrap;margin-bottom:4pt">
+          <div class="tag-wrap" style="color:inherit"><p class="tag text-cyan">功能需求清单</p></div>
+          <div class="tag-wrap" style="color:inherit"><p class="tag text-blue">UI 规范提取</p></div>
+          <div class="tag-wrap" style="color:inherit"><p class="tag text-purple">API 契约设计</p></div>
+        </div>
+        <div class="card" style="flex:1;background:#1e1e1e;border-color:#333;padding:8pt">
+          <p class="tiny" style="color:#777;text-align:center;margin-bottom:4pt">Cursor — AI Agent 对话</p>
+          <div style="background:#2d2d3f;padding:3pt 6pt;border-radius:3pt;margin-bottom:3pt"><p class="tiny" style="color:#b0b0d0">请分析原型截图中的布局和颜色</p></div>
+          <div style="background:#1a2632;padding:3pt 6pt;border-radius:3pt;margin-bottom:3pt"><p class="tiny" style="color:#88ccdd">已识别：深色科技风，7个图表模块</p></div>
+          <div style="background:#1a2632;padding:3pt 6pt;border-radius:3pt;margin-bottom:3pt"><p class="tiny" style="color:#6ee7b7">✅ Dashboard 完成：StatCard×3 + 7 ECharts</p></div>
+          <div style="background:#2d2d3f;padding:3pt 6pt;border-radius:3pt;margin-bottom:3pt"><p class="tiny" style="color:#b0b0d0">流程耗时图需要 L 型连接线</p></div>
+          <div style="background:#1a2632;padding:3pt 6pt;border-radius:3pt"><p class="tiny" style="color:#88ccdd">已用 SVG+ResizeObserver 重写 ✅</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body></html>

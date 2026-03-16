@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Cursor
+.cursor/
+
+# Build outputs
+target/
+dist/
+build/
+*.class
+*.jar
+*.war
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+*.egg-info/
+.eggs/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+*.local
