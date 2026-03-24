@@ -39,3 +39,11 @@ Thumbs.db
 .env
 .env.local
 *.local
+deploy/deploy.env
+deploy/k8s/.tmp-kustomize/
+
+# 本地密钥与打包（勿提交）
+application-local.properties
+**/application-local.properties
+chargo_order.zip
+cloud_api/charge_api_info.txt

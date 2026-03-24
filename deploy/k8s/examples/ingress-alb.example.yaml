@@ -1,0 +1,24 @@
+# 示例：使用阿里云 ALB Ingress（需集群已安装 ALB Ingress Controller，注解以控制台/文档为准）
+# 将 host、证书、ingressClass 按实际环境修改后应用。
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: robot-op-frontend
+  namespace: robot-op-center
+  annotations:
+    # 以下为常见 ALB 注解占位，请以当前地域 ACS/ACK 文档为准：
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    # alb.ingress.kubernetes.io/certificate-ids: "your-cert-id"
+    kubernetes.io/ingress.class: alb
+spec:
+  rules:
+    - host: dashboard.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: robot-op-frontend
+                port:
+                  number: 80

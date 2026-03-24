@@ -13,17 +13,209 @@
 
 ## API 接口清单
 
-云平台需要提供以下 3 个核心数据接口：
+云平台需要提供以下数据接口。**粗体**为《营收报表》PRD 与「营收分析驾驶舱」原型所需的**元数据 / 聚合**能力；其余为运营 Dashboard 原始数据接口。
 
 | 接口名称 | 接口路径 | 请求方法 | 说明 |
 |---------|---------|---------|------|
+| **营收驾驶舱元数据** | `/api/metadata/revenue-cockpit` | GET | 返回驾驶舱筛选枚举、坐标维度、业务字典及与开放平台的字段映射说明 |
+| **营收驾驶舱聚合数据（推荐）** | `/api/revenue/cockpit` | GET | 按站点与时间范围返回总营收、客单价、趋势、业务占比、TOP 站点、热力图等（可与运营中心后端聚合二选一） |
 | 获取站点列表 | `/api/sites` | GET | 返回所有运营站点的基本信息 |
-| 获取订单列表 | `/api/orders` | GET | 返回所有充电订单的原始记录 |
+| 获取订单列表 | `/api/orders` | GET | 返回所有充电订单的原始记录（含营收、业务类型字段，供侧自行聚合） |
 | 获取充电车状态列表 | `/api/robots` | GET | 返回所有充电车的当前状态 |
+
+> **对接策略说明**  
+> - **方案 A（推荐云平台实现）**：提供 `/api/revenue/cockpit` 预聚合接口，运营中心直接透传或薄封装，减轻传输与计算量。  
+> - **方案 B**：仅提供增强后的 `/api/orders` + `/api/metadata/revenue-cockpit`，由运营中心服务按 PRD 规则聚合（与当前 `RevenueService` 实现一致）。  
+> - 元数据接口 **`/api/metadata/revenue-cockpit`** 在两种方案下均建议提供，用于前端下拉选项、多语言标签与版本兼容。
+
+### 路径与充电宝开放平台（可选对照）
+
+本文档中的 `/api/...` 为**运营中心侧逻辑路径**。若实际对接使用充电宝开放平台既有入口（例如文档中的 `openApi/...` 前缀），由云平台或网关做**路径映射**即可；营收相关字段与站点编码的对照见 **`/api/metadata/revenue-cockpit`** 返回体中的 `openApiFieldMap`。
 
 ---
 
 ## 接口详细规范
+
+### 0. 营收驾驶舱元数据（云端）
+
+#### 接口信息
+
+- **接口路径**: `/api/metadata/revenue-cockpit`
+- **请求方法**: `GET`
+- **接口说明**: 为「移动储能机器人 — 营收分析驾驶舱」提供**筛选枚举、图表坐标定义、业务字典及字段映射**，与 PRD《营收报表》及原型（总营收/客单价、近 30 天趋势、业务占比、TOP5 站点、24h×周热力图）对齐。前端与运营中心可据此渲染下拉框、坐标轴标签，并与开放平台字段做版本化对照。
+
+#### 请求参数
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| `locale` | String | 否 | 语言区域，默认 `zh-CN`；如 `en-US` 可返回英文 `label` |
+
+#### 响应格式
+
+**HTTP 状态码**: `200 OK`
+
+**响应体**: `Result<RevenueCockpitMetadata>`
+
+```json
+{
+  "code": 200,
+  "success": true,
+  "msg": "操作成功",
+  "data": {
+    "schemaVersion": "1.0.0",
+    "currency": "CNY",
+    "currencySymbol": "¥",
+    "timePresets": [
+      { "value": "today", "label": "今日", "defaultSelected": false },
+      { "value": "yesterday", "label": "昨日", "defaultSelected": false },
+      { "value": "7d", "label": "近7天", "defaultSelected": false },
+      { "value": "30d", "label": "近30天", "defaultSelected": true },
+      { "value": "mtd", "label": "本月至今", "defaultSelected": false }
+    ],
+    "businessTypes": [
+      { "code": "DELIVERY", "displayName": "送电", "description": "即时送电/配送类订单营收" },
+      { "code": "BOOKING", "displayName": "预约", "description": "预约单营收" },
+      { "code": "EMERGENCY", "displayName": "应急救援", "description": "应急类订单营收" }
+    ],
+    "heatmap": {
+      "xLabels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      "xDescription": "星期维：0=Mon … 6=Sun，与订单 dayOfWeek 一致",
+      "yDescription": "小时维：0–23，由订单 timeSlot 换算：hour = timeSlot / 2（整数除法，与半小时槽起点小时一致）",
+      "valueDescription": "热力图单元值：营收金额或归一化强度指数，由聚合接口约定"
+    },
+    "trend": {
+      "defaultDays": 30,
+      "dateLabelFormat": "M月d",
+      "yAxisTitle": "营收(元)"
+    },
+    "kpiDefinitions": [
+      { "key": "totalRevenue", "displayName": "总营收", "unit": "元" },
+      { "key": "avgOrderValue", "displayName": "客单价", "unit": "元" }
+    ],
+    "openApiFieldMap": {
+      "siteId": "siteCode（开放平台 getSiteList.siteCode）",
+      "revenueYuan": "orderAmount / actualAmount / realTimeUseAmount 等以商务约定为准",
+      "businessType": "由订单类型扩展字段或 orderType/orderSource 映射至 DELIVERY/BOOKING/EMERGENCY"
+    }
+  },
+  "timestamp": 1709712000000
+}
+```
+
+#### `data` 字段说明
+
+| 字段名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| `schemaVersion` | String | 是 | 元数据契约版本，运营中心可做兼容分支 |
+| `currency` / `currencySymbol` | String | 是 | ISO 4217 与展示符号 |
+| `timePresets` | Array | 是 | 时间范围枚举；`value` 与 `/api/revenue/cockpit` 的 `preset` 一致 |
+| `businessTypes` | Array | 是 | 环形图「业务营收占比」维度；`code` 与订单 `businessType` 一致 |
+| `heatmap` | Object | 是 | 热力图坐标语义说明 |
+| `trend` | Object | 是 | 趋势图默认跨度与轴标题 |
+| `kpiDefinitions` | Array | 是 | KPI 卡片指标定义 |
+| `openApiFieldMap` | Object | 否 | 与充电宝开放平台（`getSiteList` / `queryOrderList` 等）的字段对照说明 |
+
+#### `timePresets[]` 元素
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `value` | String | 请求参数值：`today` / `yesterday` / `7d` / `30d` / `mtd` |
+| `label` | String | 界面展示文案 |
+| `defaultSelected` | Boolean | 是否建议作为默认选中项（仅一个为 `true`） |
+
+#### `businessTypes[]` 元素
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `code` | String | `DELIVERY` / `BOOKING` / `EMERGENCY` |
+| `displayName` | String | 中文展示名：送电 / 预约 / 应急救援 |
+| `description` | String | 可选说明 |
+
+#### 数据要求
+
+1. **稳定性**：`value` / `code` 为稳定枚举，变更需在 `schemaVersion` 中递增并公告。  
+2. **与订单一致**：`businessTypes.code` 必须与 `/api/orders` 中 `businessType` 可取值集合一致。  
+3. **热力图**：若云平台直接返回聚合热力图数据，须在 `/api/revenue/cockpit` 文档中明确 `heatmap` 三元组第三维含义（金额或指数）。
+
+---
+
+### 0.1 营收驾驶舱聚合数据（云端，推荐）
+
+#### 接口信息
+
+- **接口路径**: `/api/revenue/cockpit`
+- **请求方法**: `GET`
+- **接口说明**: 一次返回原型所需全部图表数据，避免拉取全量订单。字段与运营中心当前实现及前端 `normalizePayload` 一致。
+
+#### 请求参数
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| `siteId` | String | 否 | 站点 ID，与 `/api/sites` 的 `id` 一致；不传或空表示全部站点 |
+| `preset` | String | 否 | 时间范围，默认 `30d`；取值见 `/api/metadata/revenue-cockpit` 中 `timePresets.value` |
+
+#### 响应体
+
+`Result<RevenueCockpitPayload>`
+
+```json
+{
+  "code": 200,
+  "success": true,
+  "msg": "操作成功",
+  "data": {
+    "totalRevenue": 320500.0,
+    "avgOrderValue": 105.5,
+    "orderCount": 3038,
+    "trend": [
+      { "dateLabel": "2月16", "revenue": 125000.0 }
+    ],
+    "businessMix": [
+      { "name": "送电", "value": 176275.0 },
+      { "name": "预约", "value": 96150.0 },
+      { "name": "应急救援", "value": 48075.0 }
+    ],
+    "topSites": [
+      { "name": "港城广场", "revenue": 176275.0 }
+    ],
+    "heatmap": [[0, 14, 32], [5, 18, 48]],
+    "heatmapDayLabels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  },
+  "timestamp": 1709712000000
+}
+```
+
+#### `data` 业务字段说明
+
+| 字段名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| `totalRevenue` | Double | 是 | 筛选条件下总营收（元） |
+| `avgOrderValue` | Double | 是 | 客单价（元），无订单时为 0 |
+| `orderCount` | Integer | 是 | 参与统计的订单数 |
+| `trend` | Array | 是 | 趋势点列表，时间**从旧到新** |
+| `trend[].dateLabel` | String | 是 | 横轴标签，建议与元数据 `trend.dateLabelFormat` 一致，如 `M月d` |
+| `trend[].revenue` | Double | 是 | 该日营收（元） |
+| `businessMix` | Array | 是 | 环形图三段；`name` 与元数据 `displayName` 对齐 |
+| `businessMix[].name` | String | 是 | 展示名称 |
+| `businessMix[].value` | Double | 是 | 该类营收（元） |
+| `topSites` | Array | 是 | TOP 5，按 `revenue` 降序 |
+| `topSites[].name` | String | 是 | 站点名称 |
+| `topSites[].revenue` | Double | 是 | 站点营收（元） |
+| `heatmap` | Array | 是 | 若干 `[dayIndex, hour, value]`；`dayIndex` 0–6 对应 Mon–Sun；`hour` 0–23 |
+| `heatmap[].[2]` | Number | 是 | 金额（元）或归一化强度，须与元数据声明一致 |
+| `heatmapDayLabels` | Array | 是 | 与 `heatmap` 第一维一致，默认英文缩写周几 |
+
+#### PRD / 原型对照（验收要点）
+
+| 原型模块 | 数据字段 |
+|----------|----------|
+| 总营收 / 客单价 | `totalRevenue`, `avgOrderValue` |
+| 营收趋势图（柱+线） | `trend[]` |
+| 业务营收占比（送电/预约/应急） | `businessMix[]` |
+| TOP5 高营收站点 | `topSites[]`（长度 ≤5） |
+| 时段营收热力图 24h×周 | `heatmap` + `heatmapDayLabels` |
+
+---
 
 ### 1. 获取站点列表
 
@@ -127,7 +319,9 @@
       "plugInMinutes": 0,
       "chargeMinutes": 0,
       "plugOutMinutes": 0,
-      "cancelMinutes": 0
+      "cancelMinutes": 0,
+      "revenueYuan": 0.0,
+      "businessType": "DELIVERY"
     }
   ],
   "timestamp": 1709712000000
@@ -164,6 +358,8 @@
 | `chargeMinutes` | Integer | 是 | 充电耗时：从插枪到充电完成的分钟数 | `45` |
 | `plugOutMinutes` | Integer | 是 | 拔枪耗时：从充电完成到拔枪的分钟数 | `2` |
 | `cancelMinutes` | Integer | 是 | 取消等待时长：非正常结束时，取消前已等待的分钟数<br>正常结束时为 0 | `0` |
+| `revenueYuan` | Double | 是 | 该订单计入营收的金额（元），与开放平台金额字段映射见元数据 `openApiFieldMap` | `128.50` |
+| `businessType` | String | 是 | 业务类型，用于营收占比：`DELIVERY`（送电）、`BOOKING`（预约）、`EMERGENCY`（应急救援） | `"DELIVERY"` |
 
 #### 结束原因编码 (endReason)
 
@@ -192,7 +388,11 @@
 
 3. **数据精度**：
    - `estimatedKwh` 和 `actualKwh` 保留 2 位小数
+   - `revenueYuan` 保留 2 位小数；取消或未计费订单可为 `0`
    - 时间字段单位统一为分钟（整数）
+
+4. **营收与业务类型**：
+   - `businessType` 取值集合须与 `/api/metadata/revenue-cockpit` 中 `businessTypes[].code` 一致
 
 #### 成功响应示例
 
@@ -218,7 +418,9 @@
       "plugInMinutes": 3,
       "chargeMinutes": 45,
       "plugOutMinutes": 2,
-      "cancelMinutes": 0
+      "cancelMinutes": 0,
+      "revenueYuan": 128.50,
+      "businessType": "DELIVERY"
     },
     {
       "orderId": "660e8400-e29b-41d4-a716-446655440001",
@@ -235,7 +437,9 @@
       "plugInMinutes": 4,
       "chargeMinutes": 15,
       "plugOutMinutes": 2,
-      "cancelMinutes": 12
+      "cancelMinutes": 12,
+      "revenueYuan": 0.0,
+      "businessType": "BOOKING"
     }
   ],
   "timestamp": 1709712000000
@@ -699,6 +903,10 @@ public class OrderRecord {
     private int chargeMinutes;
     private int plugOutMinutes;
     private int cancelMinutes;
+    /** 订单营收（元），与开放平台金额字段映射以商务约定为准 */
+    private double revenueYuan;
+    /** DELIVERY / BOOKING / EMERGENCY，与元数据 businessTypes.code 一致 */
+    private String businessType;
 }
 ```
 
@@ -731,7 +939,7 @@ public class RobotRecord {
 
 ---
 
-**文档版本**：v2.2
-**最后更新**：2026-03-11
-**更新说明**：v2.2 修复审核问题：①增加 `daysAgo` 字段支持时间范围筛选；②站点字段统一为 `id`/`name`；③充电车标识统一为 `vin`；④修正接口编号跳跃
+**文档版本**：v2.3
+**最后更新**：2026-03-24
+**更新说明**：v2.3 ①新增营收驾驶舱元数据接口 `GET /api/metadata/revenue-cockpit` 与聚合接口 `GET /api/revenue/cockpit` 完整规范；②对接策略（方案 A/B）与开放平台路径对照说明；③订单模型补充 `revenueYuan`、`businessType` 及 `/api/orders` 字段表、示例与附录 `OrderRecord` 对齐实现。
 **文档状态**：已审核

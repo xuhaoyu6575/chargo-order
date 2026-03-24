@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>移动储能机器人 · 营收分析驾驶舱（原型）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <style>
+    :root {
+      --bg: #050a12;
+      --gold: #d4a853;
+      --gold-dim: rgba(212, 168, 83, 0.35);
+      --slate: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+      background: radial-gradient(ellipse 90% 80% at 50% -10%, rgba(212, 168, 83, 0.08), transparent 55%), var(--bg);
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1600px; margin: 0 auto; padding: 16px 16px 32px; }
+    .title-bar {
+      margin-bottom: 24px;
+      padding: 12px 8px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, transparent, rgba(212, 168, 83, 0.15), transparent);
+      border-top: 1px solid rgba(212, 168, 83, 0.25);
+      border-bottom: 1px solid rgba(212, 168, 83, 0.25);
+    }
+    .title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    h1 {
+      margin: 0;
+      flex: 1;
+      text-align: center;
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: rgba(254, 243, 199, 0.95);
+    }
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: 14px;
+    }
+    .filters label { color: rgba(253, 230, 138, 0.5); }
+    .filters select {
+      border-radius: 6px;
+      border: 1px solid rgba(217, 119, 6, 0.4);
+      background: rgba(2, 6, 23, 0.85);
+      color: #fde68a;
+      padding: 8px 12px;
+      outline: none;
+    }
+    .filters select:focus { border-color: rgba(251, 191, 36, 0.55); }
+    .note {
+      margin: 8px 0 0;
+      text-align: center;
+      font-size: 12px;
+      color: rgba(253, 230, 138, 0.4);
+    }
+    .grid-kpi {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (min-width: 768px) { .grid-kpi { grid-template-columns: 1fr 1fr; } }
+    .grid-2 {
+      display: grid;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    @media (min-width: 1280px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+    .gold-frame {
+      position: relative;
+      border: 1px solid rgba(212, 168, 83, 0.45);
+      border-radius: 6px;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(8, 12, 22, 0.96));
+      box-shadow:
+        0 0 0 1px rgba(212, 168, 83, 0.12),
+        0 0 24px rgba(212, 168, 83, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    .gold-frame::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: 7px;
+      pointer-events: none;
+      opacity: 0.35;
+      z-index: 0;
+      background: linear-gradient(135deg, rgba(212, 168, 83, 0.55), transparent 32%, transparent 68%, rgba(212, 168, 83, 0.35));
+    }
+    .gold-inner { position: relative; z-index: 1; padding: 16px; }
+    .kpi-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 140px;
+    }
+    .kpi-label { font-size: 14px; color: rgba(253, 230, 138, 0.6); margin: 0; }
+    .kpi-value {
+      margin: 8px 0 0;
+      font-family: Barlow, sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      color: #fcd34d;
+      letter-spacing: 0.02em;
+      text-shadow: 0 0 24px rgba(212, 168, 83, 0.25);
+    }
+    .chart-title {
+      margin: 0 0 8px;
+      padding-left: 8px;
+      border-left: 2px solid #fbbf24;
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(254, 243, 199, 0.9);
+    }
+    .chart { width: 100%; height: 300px; }
+    .chart-tall { height: 440px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="title-bar">
+      <div class="title-row">
+        <h1>移动储能机器人 · 营收分析驾驶舱</h1>
+        <div class="filters">
+          <label for="siteSel">站点选择</label>
+          <select id="siteSel">
+            <option value="">全部站点</option>
+            <option value="S001">港城广场</option>
+            <option value="S002">临港基地</option>
+            <option value="S003">泰安运营</option>
+          </select>
+          <label for="presetSel">时间范围</label>
+          <select id="presetSel">
+            <option value="today">今日</option>
+            <option value="yesterday">昨日</option>
+            <option value="7d">近7天</option>
+            <option value="30d" selected>近30天</option>
+            <option value="mtd">本月至今</option>
+          </select>
+        </div>
+      </div>
+      <p class="note">独立 HTML 原型 · 演示数据 · 可直接用浏览器打开本文件</p>
+    </header>
+
+    <div class="grid-kpi">
+      <div class="gold-frame">
+        <div class="gold-inner kpi-inner">
+          <p class="kpi-label">总营收</p>
+          <p class="kpi-value" id="kpiTotal">¥ —</p>
+        </div>
+      </div>
+      <div class="gold-frame">
+        <div class="gold-inner kpi-inner">
+          <p class="kpi-label">客单价</p>
+          <p class="kpi-value" id="kpiAov">¥ —</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="gold-frame">
+        <div class="gold-inner">
+          <h3 class="chart-title" id="trendTitle">营收趋势图（近30天）</h3>
+          <div id="chartTrend" class="chart"></div>
+        </div>
+      </div>
+      <div class="gold-frame">
+        <div class="gold-inner">
+          <h3 class="chart-title">业务营收占比（预约 / 送电 / 应急）</h3>
+          <div id="chartDonut" class="chart"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="gold-frame">
+        <div class="gold-inner">
+          <h3 class="chart-title">TOP 5 高营收站点排名</h3>
+          <div id="chartTop" class="chart"></div>
+        </div>
+      </div>
+      <div class="gold-frame">
+        <div class="gold-inner">
+          <h3 class="chart-title">时段营收热力图（24 小时 × 周）</h3>
+          <div id="chartHeat" class="chart chart-tall"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GOLD = "#d4a853";
+    const GOLD_DIM = "rgba(212,168,83,0.35)";
+
+    function daysForPreset(preset) {
+      switch (preset) {
+        case "today":
+        case "yesterday": return 1;
+        case "7d": return 7;
+        case "mtd": return 18;
+        case "30d":
+        default: return 30;
+      }
+    }
+
+    function mulberry32(a) {
+      return function () {
+        let t = (a += 0x6d2b79f5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function buildMock(preset) {
+      const n = daysForPreset(preset);
+      const rng = mulberry32(preset.split("").reduce((s, c) => s + c.charCodeAt(0), n * 9973));
+      const today = new Date();
+      const trend = [];
+      for (let i = n - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const m = d.getMonth() + 1;
+        const day = d.getDate();
+        const base = 8000 + ((d.getDay() + 1) % 7) * 1200;
+        const rev = Math.round(base + Math.sin(i / 3) * 4000 + (i % 5) * 800 + rng() * 2000);
+        trend.push({ dateLabel: m + "月" + day, revenue: rev });
+      }
+
+      const delivery = 176275;
+      const booking = 96150;
+      const emergency = 48075;
+      const totalRevenue = delivery + booking + emergency;
+      const orderCount = Math.max(1, Math.round(totalRevenue / 105.5));
+
+      const topSites = [
+        { name: "港城广场", revenue: 176275 },
+        { name: "临港基地", revenue: 142800 },
+        { name: "泰安运营", revenue: 128400 },
+        { name: "金桥示范", revenue: 98500 },
+        { name: "张江站点", revenue: 87300 },
+      ];
+
+      const heatmap = [];
+      const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      for (let h = 0; h < 24; h++) {
+        for (let wd = 0; wd < 7; wd++) {
+          let v = 2 + rng() * 8;
+          if (wd >= 5 && h >= 11 && h <= 21) v += 25 + rng() * 20;
+          if (wd >= 4 && wd <= 5 && h >= 16 && h <= 20) v += 15;
+          heatmap.push([wd, h, Math.round(v)]);
+        }
+      }
+
+      return {
+        totalRevenue,
+        avgOrderValue: Math.round((totalRevenue / orderCount) * 10) / 10,
+        trend,
+        businessMix: [
+          { name: "送电", value: delivery },
+          { name: "预约", value: booking },
+          { name: "应急救援", value: emergency },
+        ],
+        topSites,
+        heatmap,
+        dayLabels,
+      };
+    }
+
+    function optTrend(trend) {
+      const dates = trend.map((t) => t.dateLabel);
+      const bar = trend.map((t) => t.revenue);
+      return {
+        tooltip: { trigger: "axis" },
+        legend: { data: ["日营收", "趋势线"], textStyle: { color: "#94a3b8", fontSize: 11 }, top: 0 },
+        grid: { left: 48, right: 16, top: 36, bottom: 28 },
+        xAxis: {
+          type: "category",
+          data: dates,
+          axisLabel: { color: "#64748b", fontSize: 10, rotate: dates.length > 14 ? 40 : 0 },
+          axisLine: { lineStyle: { color: "#2a3f5c" } },
+        },
+        yAxis: {
+          type: "value",
+          name: "营收(元)",
+          nameTextStyle: { color: "#64748b", fontSize: 11 },
+          axisLabel: { color: "#64748b", fontSize: 10 },
+          splitLine: { lineStyle: { color: "#1a3350", type: "dashed" } },
+        },
+        series: [
+          {
+            name: "日营收",
+            type: "bar",
+            barMaxWidth: 14,
+            itemStyle: {
+              color: {
+                type: "linear", x: 0, y: 0, x2: 0, y2: 1,
+                colorStops: [
+                  { offset: 0, color: "#3b82f6" },
+                  { offset: 1, color: "#1e3a8a" },
+                ],
+              },
+            },
+            data: bar,
+          },
+          {
+            name: "趋势线",
+            type: "line",
+            smooth: true,
+            symbol: "circle",
+            symbolSize: 4,
+            lineStyle: { width: 2, color: GOLD },
+            itemStyle: { color: GOLD },
+            data: bar,
+          },
+        ],
+      };
+    }
+
+    function optDonut(mix) {
+      return {
+        tooltip: { trigger: "item", formatter: "{b}: ¥{c} ({d}%)" },
+        legend: { orient: "vertical", right: 8, top: "middle", textStyle: { color: "#94a3b8", fontSize: 11 } },
+        series: [
+          {
+            type: "pie",
+            radius: ["46%", "72%"],
+            center: ["38%", "50%"],
+            avoidLabelOverlap: true,
+            itemStyle: { borderColor: "#0a0f1a", borderWidth: 2 },
+            label: { color: "#cbd5e1", formatter: "{b}\n¥{c}" },
+            data: [
+              { value: mix[0].value, name: mix[0].name, itemStyle: { color: "#3b82f6" } },
+              { value: mix[1].value, name: mix[1].name, itemStyle: { color: GOLD } },
+              { value: mix[2].value, name: mix[2].name, itemStyle: { color: "#dc2626" } },
+            ],
+          },
+        ],
+      };
+    }
+
+    function optTop(topSites) {
+      const names = topSites.map((s) => s.name).reverse();
+      const vals = topSites.map((s) => s.revenue).reverse();
+      return {
+        tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+        grid: { left: 88, right: 24, top: 8, bottom: 8 },
+        xAxis: {
+          type: "value",
+          axisLabel: { color: "#64748b", formatter: (v) => "¥" + (v / 1000).toFixed(0) + "k" },
+          splitLine: { lineStyle: { color: "#1a3350" } },
+        },
+        yAxis: {
+          type: "category",
+          data: names,
+          axisLabel: { color: "#94a3b8", fontSize: 11 },
+          axisLine: { show: false },
+          axisTick: { show: false },
+        },
+        series: [
+          {
+            type: "bar",
+            data: vals,
+            barMaxWidth: 18,
+            itemStyle: {
+              color: {
+                type: "linear", x: 0, y: 0, x2: 1, y2: 0,
+                colorStops: [
+                  { offset: 0, color: "#b45309" },
+                  { offset: 1, color: GOLD },
+                ],
+              },
+              borderRadius: [0, 4, 4, 0],
+            },
+            label: {
+              show: true,
+              position: "right",
+              color: GOLD_DIM,
+              formatter: (p) => "¥" + p.value.toLocaleString(),
+            },
+          },
+        ],
+      };
+    }
+
+    function optHeat(heatmap, dayLabels) {
+      const hours = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0") + ":00");
+      const maxV = Math.max(...heatmap.map((x) => x[2]), 1);
+      return {
+        backgroundColor: "transparent",
+        tooltip: {
+          position: "top",
+          backgroundColor: "rgba(15, 23, 42, 0.92)",
+          borderColor: "rgba(212, 168, 83, 0.35)",
+          borderWidth: 1,
+          textStyle: { color: "#e2e8f0", fontSize: 12 },
+          formatter: (p) => {
+            const v = p.value;
+            return dayLabels[v[0]] + " " + hours[v[1]] + "<br/>营收指数: " + v[2];
+          },
+        },
+        grid: { left: 48, right: 56, top: 8, bottom: 40 },
+        xAxis: {
+          type: "category",
+          data: dayLabels,
+          position: "bottom",
+          axisLine: { lineStyle: { color: "rgba(212, 168, 83, 0.25)" } },
+          axisTick: { show: false },
+          axisLabel: { color: "#8899aa", fontSize: 11, margin: 10, fontWeight: 500 },
+          splitArea: { show: false },
+        },
+        yAxis: {
+          type: "category",
+          data: hours,
+          inverse: true,
+          axisLine: { lineStyle: { color: "rgba(212, 168, 83, 0.2)" } },
+          axisTick: { show: false },
+          axisLabel: { color: "#64748b", fontSize: 10, interval: 3 },
+          splitArea: { show: false },
+        },
+        visualMap: {
+          type: "continuous",
+          min: 0,
+          max: maxV,
+          calculable: false,
+          orient: "vertical",
+          right: 4,
+          top: "middle",
+          itemWidth: 12,
+          itemHeight: 200,
+          padding: [0, 0, 0, 4],
+          inverse: true,
+          text: ["低", "高"],
+          textStyle: { color: "#94a3b8", fontSize: 10 },
+          inRange: {
+            color: ["#0a1628", "#1f0a0c", "#7f1d1d", "#dc2626", "#ea580c", "#f59e0b", "#fde047", "#fffbeb"],
+          },
+          outOfRange: { color: ["#0a1628"] },
+        },
+        series: [
+          {
+            type: "heatmap",
+            data: heatmap,
+            itemStyle: { borderWidth: 0.5, borderColor: "rgba(5, 10, 20, 0.45)" },
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowColor: GOLD_DIM,
+                borderColor: "rgba(212, 168, 83, 0.5)",
+              },
+            },
+          },
+        ],
+      };
+    }
+
+    const presetLabels = {
+      today: "今日",
+      yesterday: "昨日",
+      "7d": "近7天",
+      "30d": "近30天",
+      mtd: "本月至今",
+    };
+
+    let cTrend, cDonut, cTop, cHeat;
+
+    function render() {
+      const preset = document.getElementById("presetSel").value;
+      const data = buildMock(preset);
+
+      document.getElementById("kpiTotal").textContent = "¥ " + data.totalRevenue.toLocaleString();
+      document.getElementById("kpiAov").textContent = "¥ " + data.avgOrderValue.toLocaleString();
+      document.getElementById("trendTitle").textContent =
+        preset === "30d" ? "营收趋势图（近30天）" : "营收趋势图（" + (presetLabels[preset] || preset) + "）";
+
+      if (!cTrend) {
+        cTrend = echarts.init(document.getElementById("chartTrend"));
+        cDonut = echarts.init(document.getElementById("chartDonut"));
+        cTop = echarts.init(document.getElementById("chartTop"));
+        cHeat = echarts.init(document.getElementById("chartHeat"));
+        window.addEventListener("resize", () => {
+          cTrend.resize();
+          cDonut.resize();
+          cTop.resize();
+          cHeat.resize();
+        });
+      }
+
+      cTrend.setOption(optTrend(data.trend), true);
+      cDonut.setOption(optDonut(data.businessMix), true);
+      cTop.setOption(optTop(data.topSites), true);
+      cHeat.setOption(optHeat(data.heatmap, data.dayLabels), true);
+    }
+
+    document.getElementById("presetSel").addEventListener("change", render);
+    document.getElementById("siteSel").addEventListener("change", render);
+    render();
+  </script>
+</body>
+</html>

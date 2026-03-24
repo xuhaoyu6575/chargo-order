@@ -1,0 +1,20 @@
+# 使用方式：
+# 1. 修改下方 images 的 newName/newTag 为您的 ACR 地址与标签
+# 2. kubectl apply -k deploy/k8s/base
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: robot-op-center
+
+resources:
+  - namespace.yaml
+  - api.yaml
+  - frontend.yaml
+
+images:
+  - name: robot-op-api
+    newName: registry.cn-hangzhou.aliyuncs.com/YOUR_NAMESPACE/robot-op-api
+    newTag: "1.0.0"
+  - name: robot-op-frontend
+    newName: registry.cn-hangzhou.aliyuncs.com/YOUR_NAMESPACE/robot-op-frontend
+    newTag: "1.0.0"

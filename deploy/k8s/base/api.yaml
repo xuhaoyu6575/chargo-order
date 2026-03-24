@@ -1,0 +1,83 @@
+# 后端 API（Spring Boot）。镜像由 Kustomize 或手工替换为 ACR 完整地址。
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: robot-op-api
+  namespace: robot-op-center
+  labels:
+    app.kubernetes.io/name: robot-op-api
+    app.kubernetes.io/component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: robot-op-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: robot-op-api
+        app.kubernetes.io/component: api
+    spec:
+      # 若 ACR 为私有仓库，取消下一行注释并先创建 regcred Secret
+      # imagePullSecrets:
+      #   - name: acr-regcred
+      containers:
+        - name: api
+          image: robot-op-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            # 傻瓜式首次部署保持 true 即可开箱演示；接真实云改为 false 并配置 BASE_URL + Secret
+            - name: CLOUD_API_MOCK
+              value: "true"
+            - name: CLOUD_API_BASE_URL
+              value: "https://your-cloud-api.example.com"
+            - name: CLOUD_API_AK
+              valueFrom:
+                secretKeyRef:
+                  name: robot-op-cloud-credentials
+                  key: ak
+                  optional: true
+            - name: CLOUD_API_SK
+              valueFrom:
+                secretKeyRef:
+                  name: robot-op-cloud-credentials
+                  key: sk
+                  optional: true
+            # 可选：- name: SPRING_PROFILES_ACTIVE
+            #       value: "prod"
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 45
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "2"
+              memory: "1536Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: robot-op-api
+  namespace: robot-op-center
+  labels:
+    app.kubernetes.io/name: robot-op-api
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: robot-op-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

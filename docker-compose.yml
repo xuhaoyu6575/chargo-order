@@ -1,0 +1,26 @@
+# 运营中心：前端 + Spring Boot API
+# 构建：在仓库根目录执行  docker compose build
+# 启动：docker compose up -d
+# 访问：http://localhost:3000  （/api 由 Nginx 转发至后端）
+services:
+  api:
+    build:
+      context: ./robot_op_center_springboot_v1
+    image: robot-op-center-api:latest
+    ports:
+      - "8080:8080"
+    environment:
+      # 与 application.properties 对应；生产请改为 false 并配置真实云地址与密钥
+      CLOUD_API_MOCK: "true"
+      # SPRING_PROFILES_ACTIVE: prod
+
+  frontend:
+    build:
+      context: ./robot_op_center_frontend
+    image: robot-op-center-frontend:latest
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    environment:
+      API_UPSTREAM: api

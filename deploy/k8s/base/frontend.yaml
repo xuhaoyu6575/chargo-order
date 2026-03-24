@@ -1,0 +1,69 @@
+# 前端静态资源 + Nginx 反代 /api → 后端 Service robot-op-api:8080
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: robot-op-frontend
+  namespace: robot-op-center
+  labels:
+    app.kubernetes.io/name: robot-op-frontend
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: robot-op-frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: robot-op-frontend
+        app.kubernetes.io/component: frontend
+    spec:
+      # imagePullSecrets:
+      #   - name: acr-regcred
+      containers:
+        - name: frontend
+          image: robot-op-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            # 必须与上方 api Service 的 metadata.name 一致（同命名空间内 DNS 短名）
+            - name: API_UPSTREAM
+              value: robot-op-api
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: robot-op-frontend
+  namespace: robot-op-center
+  labels:
+    app.kubernetes.io/name: robot-op-frontend
+spec:
+  # 快速验证可用 NodePort；生产建议改为 ClusterIP + Ingress（见部署说明）
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: robot-op-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

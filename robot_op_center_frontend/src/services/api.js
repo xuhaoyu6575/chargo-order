@@ -29,6 +29,12 @@ function buildParams(siteId, days) {
 }
 
 export const api = {
+  /** 营收驾驶舱；后端未实现时调用方应 catch 并回退 mock */
+  getRevenueCockpit: (siteId, preset) => {
+    const params = { preset: preset || '30d' };
+    if (siteId) params.siteId = siteId;
+    return instance.get('/revenue/cockpit', { params });
+  },
   getSites: () => instance.get('/dashboard/sites'),
   getStats: (siteId, days) => instance.get('/dashboard/stats', buildParams(siteId, days)),
   getCompletionRate: (siteId, days) => instance.get('/dashboard/completion-rate', buildParams(siteId, days)),

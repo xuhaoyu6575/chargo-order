@@ -112,6 +112,9 @@ public class MockCloudApiClient implements CloudApiClient {
             actualKwh = estimatedKwh * (0.05 + rng.nextDouble() * 0.4);
         }
 
+        String businessType = pickBusinessType(rng);
+        double revenueYuan = estimateRevenueYuan(endReason, actualKwh, rng);
+
         return OrderRecord.builder()
                 .orderId(UUID.randomUUID().toString())
                 .siteId(siteId)
@@ -128,7 +131,27 @@ public class MockCloudApiClient implements CloudApiClient {
                 .chargeMinutes(clamp(gauss(rng, 45, 12), 10, 120))
                 .plugOutMinutes(clamp(gauss(rng, 2, 1), 1, 8))
                 .cancelMinutes("NORMAL".equals(endReason) ? 0 : clamp(gauss(rng, 12, 5), 1, 40))
+                .revenueYuan(revenueYuan)
+                .businessType(businessType)
                 .build();
+    }
+
+    private static String pickBusinessType(Random rng) {
+        double r = rng.nextDouble();
+        if (r < 0.52) {
+            return "DELIVERY";
+        }
+        if (r < 0.86) {
+            return "BOOKING";
+        }
+        return "EMERGENCY";
+    }
+
+    private static double estimateRevenueYuan(String endReason, double actualKwh, Random rng) {
+        if ("NORMAL".equals(endReason) || "VEHICLE_FULL".equals(endReason)) {
+            return round2(actualKwh * (3.2 + rng.nextDouble() * 0.8));
+        }
+        return round2(actualKwh * rng.nextDouble() * 2.2);
     }
 
     private static String pickEndReason(Random rng) {

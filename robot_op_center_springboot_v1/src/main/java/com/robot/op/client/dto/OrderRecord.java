@@ -39,4 +39,10 @@ public class OrderRecord {
     private int chargeMinutes;
     private int plugOutMinutes;
     private int cancelMinutes;
+
+    /** 订单营收（元） */
+    private double revenueYuan;
+
+    /** DELIVERY / BOOKING / EMERGENCY */
+    private String businessType;
 }

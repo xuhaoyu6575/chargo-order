@@ -1,0 +1,98 @@
+.revenue-cockpit {
+  min-height: calc(100vh - 3.5rem);
+  background: radial-gradient(ellipse 90% 80% at 50% -10%, rgba(212, 168, 83, 0.08), transparent 55%),
+    #050a12;
+  color: #e2e8f0;
+}
+
+.revenue-cockpit .gold-frame {
+  position: relative;
+  border: 1px solid rgba(212, 168, 83, 0.45);
+  border-radius: 6px;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(8, 12, 22, 0.96));
+  box-shadow:
+    0 0 0 1px rgba(212, 168, 83, 0.12),
+    0 0 24px rgba(212, 168, 83, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.revenue-cockpit .gold-frame::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 7px;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 168, 83, 0.55),
+    transparent 32%,
+    transparent 68%,
+    rgba(212, 168, 83, 0.35)
+  );
+  opacity: 0.35;
+  z-index: 0;
+}
+
+.revenue-cockpit .gold-frame-inner {
+  position: relative;
+  z-index: 1;
+  padding: 1rem;
+}
+
+.revenue-title-bar {
+  background: linear-gradient(90deg, transparent, rgba(212, 168, 83, 0.15), transparent);
+  border-top: 1px solid rgba(212, 168, 83, 0.25);
+  border-bottom: 1px solid rgba(212, 168, 83, 0.25);
+}
+
+.revenue-kpi-value {
+  font-family: 'Barlow', ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 24px rgba(212, 168, 83, 0.25);
+}
+
+/* 底行两列等高（由 grid items-stretch + 列内 flex-1 撑满） */
+.revenue-bottom-row {
+  align-items: stretch;
+}
+
+.revenue-bottom-row > .gold-frame {
+  min-height: 0;
+}
+
+/* TOP5：在等高卡片内占满剩余高度 */
+.revenue-top5-chart {
+  min-height: 280px;
+}
+
+/* 热力图：底部留白，避免 ECharts 容器裁切 visualMap */
+.revenue-heatmap-chart {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+  padding-bottom: 4px;
+}
+
+.revenue-heatmap-echarts-wrap {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 400px;
+}
+
+/* 小屏单列时仍给热力图固定视觉高度 */
+.revenue-heatmap-rail {
+  min-height: 440px;
+}
+
+@media (min-width: 1024px) {
+  /* 大屏与左侧同列拉伸：不设死高度，由行高与 flex-1 决定 */
+  .revenue-bottom-row .revenue-heatmap-rail {
+    min-height: 0;
+  }
+
+  .revenue-bottom-row .revenue-heatmap-echarts-wrap {
+    min-height: min(480px, calc(100vh - 10rem));
+  }
+}
