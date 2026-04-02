@@ -25,11 +25,21 @@ public class CloudPageRequest {
 
     public Map<String, Object> toMap() {
         Map<String, Object> m = new HashMap<>();
-        if (pageNo != null) m.put("pageNo", pageNo);
-        if (pageSize != null) m.put("pageSize", pageSize);
-        if (siteId != null && !siteId.isEmpty()) m.put("siteId", siteId);
-        if (beginDate != null && !beginDate.isEmpty()) m.put("beginDate", beginDate);
-        if (endDate != null && !endDate.isEmpty()) m.put("endDate", endDate);
+        if (pageNo != null) {
+            m.put("pageNo", pageNo);
+        }
+        if (pageSize != null) {
+            m.put("pageSize", pageSize);
+        }
+        if (siteId != null && !siteId.isEmpty()) {
+            m.put("siteId", siteId);
+        }
+        if (beginDate != null && !beginDate.isEmpty()) {
+            m.put("beginDate", beginDate);
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            m.put("endDate", endDate);
+        }
         return m;
     }
 }

@@ -3,10 +3,13 @@ package com.robot.op.service;
 import com.robot.op.client.dto.AuthTokenData;
 import com.robot.op.client.dto.AuthTokenResponse;
 import com.robot.op.client.dto.GetAuthTokenRequest;
+import lombok.extern.slf4j.Slf4j;
+import com.robot.op.config.NeedsRealCloudClientCondition;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
@@ -21,8 +24,9 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * 云平台认证服务：获取 token，并在业务接口请求头中提供 appKey、timestamp、lmt-auth-token
  */
+@Slf4j
 @Service
-@ConditionalOnProperty(name = "cloud.api.mock", havingValue = "false")
+@Conditional(NeedsRealCloudClientCondition.class)
 public class CloudAuthService {
 
     private static final String SALT = "catl";
@@ -60,7 +64,22 @@ public class CloudAuthService {
         headers.set("appKey", ak);
         headers.set("timestamp", String.valueOf(timestamp));
         headers.set("lmt-auth-token", lmtAuthToken);
+        if (log.isTraceEnabled()) {
+            log.trace("组装业务请求头 reqId={} appKey={} timestamp={} (lmt-auth-token 已省略)",
+                    headers.getFirst("reqId"), maskAk(ak), timestamp);
+        }
         return headers;
+    }
+
+    /** 日志中仅保留 AK 尾部，避免完整泄露 */
+    private static String maskAk(String ak) {
+        if (ak == null || ak.isEmpty()) {
+            return "(empty)";
+        }
+        if (ak.length() <= 6) {
+            return "***";
+        }
+        return "…" + ak.substring(ak.length() - 4);
     }
 
     /**
@@ -79,6 +98,7 @@ public class CloudAuthService {
         long now = System.currentTimeMillis();
         if (cached != null && cached.getExpireTime() != null
                 && cached.getExpireTime() - now > REFRESH_BUFFER_MS) {
+            log.trace("使用缓存的云平台 token");
             return cached;
         }
         synchronized (this) {
@@ -86,6 +106,7 @@ public class CloudAuthService {
                     && cached.getExpireTime() - now > REFRESH_BUFFER_MS) {
                 return cached;
             }
+            log.info("正在向云平台请求新的 access token");
             cached = fetchToken();
             cachedAt = now;
             return cached;
@@ -97,26 +118,40 @@ public class CloudAuthService {
         String authKey = md5(sk + SALT + timestamp);
 
         String url = baseUrl().replaceAll("/$", "") + "/openApi/auth/getAuthToken";
+        log.info("云平台鉴权: POST /openApi/auth/getAuthToken baseUrl={} appKey={}",
+                baseUrl(), maskAk(ak));
         GetAuthTokenRequest body = new GetAuthTokenRequest(authKey);
         HttpEntity<GetAuthTokenRequest> entity = new HttpEntity<>(body, getTokenRequestHeaders(timestamp));
 
-        ResponseEntity<AuthTokenResponse> resp = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                entity,
-                AuthTokenResponse.class
-        );
-
-        AuthTokenResponse result = resp.getBody();
-        if (result == null || !"0".equals(result.getCode())) {
-            String msg = result != null ? result.getMsg() : "响应为空";
-            throw new RuntimeException("获取 token 失败: " + msg);
+        long t0 = System.currentTimeMillis();
+        try {
+            ResponseEntity<AuthTokenResponse> resp = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    entity,
+                    AuthTokenResponse.class
+            );
+            long elapsed = System.currentTimeMillis() - t0;
+            AuthTokenResponse result = resp.getBody();
+            if (result == null || !"0".equals(result.getCode())) {
+                String msg = result != null ? result.getMsg() : "响应为空";
+                String code = result != null ? String.valueOf(result.getCode()) : "null";
+                log.warn("云平台 getAuthToken 业务失败 code={} msg={} 耗时={}ms", code, msg, elapsed);
+                throw new RuntimeException("获取 token 失败: " + msg);
+            }
+            AuthTokenData data = result.getData();
+            if (data == null || data.getToken() == null) {
+                log.warn("云平台 getAuthToken 成功但 data/token 为空 耗时={}ms", elapsed);
+                throw new RuntimeException("获取 token 失败: data 为空");
+            }
+            log.info("云平台 token 获取成功 expireTime={} 耗时={}ms (token 内容不记录日志)",
+                    data.getExpireTime(), elapsed);
+            return data;
+        } catch (RestClientException e) {
+            long elapsed = System.currentTimeMillis() - t0;
+            log.error("云平台 getAuthToken HTTP/网络异常 耗时={}ms url={}", elapsed, url, e);
+            throw new RuntimeException("获取 token 网络异常: " + e.getMessage(), e);
         }
-        AuthTokenData data = result.getData();
-        if (data == null || data.getToken() == null) {
-            throw new RuntimeException("获取 token 失败: data 为空");
-        }
-        return data;
     }
 
     private String baseUrl() {

@@ -3,12 +3,17 @@ package com.robot.op.service;
 import com.robot.op.client.CloudApiClient;
 import com.robot.op.client.dto.OrderRecord;
 import com.robot.op.client.dto.RobotRecord;
+import com.robot.op.config.CloudApiClientQualifiers;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 运营看板业务；云平台数据由 {@code cloud.api.mock} 决定（仅本模块），与 {@code revenue.api.mock} 无关。
+ */
 @Slf4j
 
 @Service
@@ -29,14 +34,16 @@ public class DashboardService {
 
     private final CloudApiClient cloudApiClient;
 
-    public DashboardService(CloudApiClient cloudApiClient) {
+    public DashboardService(@Qualifier(CloudApiClientQualifiers.DASHBOARD) CloudApiClient cloudApiClient) {
         this.cloudApiClient = cloudApiClient;
     }
 
     // -------------------- 站点列表 --------------------
 
     public List<Map<String, String>> getSites() {
-        return cloudApiClient.getSites();
+        List<Map<String, String>> sites = cloudApiClient.getSites();
+        log.debug("getSites: {} 个站点", sites.size());
+        return sites;
     }
 
     // -------------------- 公共筛选 --------------------
@@ -59,6 +66,7 @@ public class DashboardService {
     public Map<String, Object> getStats(String siteId, int days) {
         List<OrderRecord> orders = filterOrders(siteId, days);
         List<RobotRecord> robots = filterRobots(siteId);
+        log.debug("getStats: siteId={} days={} 订单={} 车辆={}", siteId, days, orders.size(), robots.size());
 
         long totalKwh = Math.round(orders.stream().mapToDouble(OrderRecord::getActualKwh).sum());
         long activeRobots = robots.stream().filter(RobotRecord::isActive).count();

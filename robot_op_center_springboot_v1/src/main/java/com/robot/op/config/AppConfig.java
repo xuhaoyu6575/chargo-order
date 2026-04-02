@@ -1,11 +1,16 @@
 package com.robot.op.config;
 
+import com.robot.op.client.http.CloudHttpLoggingInterceptor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
+
+@Slf4j
 @Configuration
 public class AppConfig {
 
@@ -22,6 +27,9 @@ public class AppConfig {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(connectTimeoutMs);
         factory.setReadTimeout(readTimeoutMs);
-        return new RestTemplate(factory);
+        log.debug("RestTemplate 超时: connect={}ms read={}ms", connectTimeoutMs, readTimeoutMs);
+        RestTemplate restTemplate = new RestTemplate(factory);
+        restTemplate.setInterceptors(List.of(new CloudHttpLoggingInterceptor()));
+        return restTemplate;
     }
 }

@@ -3,14 +3,17 @@ package com.robot.op.client.impl;
 import com.robot.op.client.CloudApiClient;
 import com.robot.op.client.dto.OrderRecord;
 import com.robot.op.client.dto.RobotRecord;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.util.*;
 
-@Component
-@ConditionalOnProperty(name = "cloud.api.mock", havingValue = "true", matchIfMissing = true)
+/**
+ * 本地仿真订单/站点/车辆数据。由 {@link com.robot.op.config.CloudApiClientRoutingConfiguration} 注册为 Bean，
+ * 供 Dashboard（{@code cloud.api.mock=true}）或营收驾驶舱（{@code revenue.api.mock=true}）使用。
+ */
+@Slf4j
 public class MockCloudApiClient implements CloudApiClient {
 
     private static final String[][] SITES = {
@@ -29,13 +32,20 @@ public class MockCloudApiClient implements CloudApiClient {
     private static final List<OrderRecord> ORDERS = generateOrders();
     private static final List<RobotRecord> ROBOTS = generateRobots();
 
+    @PostConstruct
+    void logMode() {
+        log.info("云平台客户端: 本地仿真（MockCloudApiClient），数据为内存生成；不调用开放平台 HTTP");
+    }
+
     @Override
     public List<OrderRecord> getOrders() {
+        log.info("Mock 数据源: getOrders size={}", ORDERS.size());
         return ORDERS;
     }
 
     @Override
     public List<RobotRecord> getRobots() {
+        log.info("Mock 数据源: getRobots size={}", ROBOTS.size());
         return ROBOTS;
     }
 
@@ -48,6 +58,7 @@ public class MockCloudApiClient implements CloudApiClient {
             m.put("name", s[1]);
             list.add(m);
         }
+        log.info("Mock 数据源: getSites count={}", list.size());
         return list;
     }
 

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="service.name" source="spring.application.name" defaultValue="dashboard"/>
+    <springProperty scope="context" name="logging.dir" source="logging.file.path" defaultValue="./logs"/>
+    <springProperty scope="context" name="logging.file.total-size-cap" source="logging.logback.rollingpolicy.total-size-cap" defaultValue="1GB"/>
+    <springProperty scope="context" name="logging.file.max-size" source="logging.logback.rollingpolicy.max-file-size" defaultValue="50MB"/>
+    <springProperty scope="context" name="logging.file.max-history" source="logging.logback.rollingpolicy.max-history" defaultValue="15"/>
+    <springProperty scope="context" name="logging.level.com.robot.op" source="logging.level.com.robot.op" defaultValue="INFO"/>
+    <springProperty scope="context" name="logging.level.root" source="logging.level.root" defaultValue="INFO"/>
+    <springProperty scope="context" name="log.charset.console" source="logging.charset.console" defaultValue="UTF-8"/>
+    <springProperty scope="context" name="log.charset.file" source="logging.charset.file" defaultValue="UTF-8"/>
+
+    <property name="log_pattern_console"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}):%L - %msg%n"/>
+    <property name="log_pattern_file"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36}:%L - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${log_pattern_console}</pattern>
+            <charset>${log.charset.console}</charset>
+        </encoder>
+    </appender>
+
+    <appender name="LOG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.dir}/${service.name}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logging.dir}/history/${service.name}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>${logging.file.max-size}</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>${logging.file.max-history}</maxHistory>
+            <totalSizeCap>${logging.file.total-size-cap}</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>${log_pattern_file}</pattern>
+            <charset>${log.charset.file}</charset>
+        </encoder>
+    </appender>
+
+    <root level="${logging.level.root}">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="LOG_FILE"/>
+    </root>
+
+    <!-- 业务包：默认 INFO；整体调试保持 INFO，细查可设 logging.level.com.robot.op=DEBUG -->
+    <logger name="com.robot.op" level="${logging.level.com.robot.op}" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="LOG_FILE"/>
+    </logger>
+</configuration>

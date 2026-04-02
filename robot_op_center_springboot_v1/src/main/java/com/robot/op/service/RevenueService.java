@@ -2,12 +2,20 @@ package com.robot.op.service;
 
 import com.robot.op.client.CloudApiClient;
 import com.robot.op.client.dto.*;
+import com.robot.op.config.CloudApiClientQualifiers;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 营收驾驶舱；订单来源由 {@code revenue.api.mock} 决定，与 Dashboard 的 {@code cloud.api.mock} 独立。
+ * 走云平台时应对齐 {@code cloud_api/cloud_API_doc.md} 中 {@code GET /api/revenue/cockpit}（附录 B 为文档级元数据）。
+ */
+@Slf4j
 @Service
 public class RevenueService {
 
@@ -15,7 +23,7 @@ public class RevenueService {
 
     private final CloudApiClient cloudApiClient;
 
-    public RevenueService(CloudApiClient cloudApiClient) {
+    public RevenueService(@Qualifier(CloudApiClientQualifiers.REVENUE) CloudApiClient cloudApiClient) {
         this.cloudApiClient = cloudApiClient;
     }
 
@@ -26,18 +34,21 @@ public class RevenueService {
         }
 
         List<OrderRecord> all = cloudApiClient.getOrders();
+        log.debug("营收驾驶舱: 源订单总数={} siteId={} preset={}", all.size(), siteId, p);
         List<OrderRecord> filtered = all.stream()
                 .filter(o -> siteMatches(siteId, o))
                 .filter(o -> inPreset(o, p))
                 .collect(Collectors.toList());
 
         if (filtered.isEmpty()) {
+            log.info("营收驾驶舱: 无匹配订单，返回仿真数据 preset={}", p);
             return buildSimulatedCockpit(p);
         }
 
         double total = filtered.stream().mapToDouble(this::orderRevenue).sum();
         int count = filtered.size();
         double aov = count > 0 ? Math.round((total / count) * 10.0) / 10.0 : 0;
+        log.info("营收驾驶舱: 匹配订单={} 总营收={} 客单价={}", count, round2(total), aov);
 
         LocalDate today = LocalDate.now();
         List<Integer> trendDayAgos = trendDayAgos(p, today);

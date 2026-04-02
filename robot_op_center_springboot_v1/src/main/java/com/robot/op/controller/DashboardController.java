@@ -2,12 +2,16 @@ package com.robot.op.controller;
 
 import com.robot.op.common.Result;
 import com.robot.op.service.DashboardService;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 运营看板 API；数据源由 {@code cloud.api.mock} 控制（仅本模块），与 {@code revenue.api.mock} 无关。
+ */
+@Slf4j
 @RestController
 @RequestMapping("/api/dashboard")
 @CrossOrigin(origins = "${cors.allowed-origins:*}")
@@ -25,6 +29,7 @@ public class DashboardController {
 
     @GetMapping("/sites")
     public Result<List<Map<String, String>>> getSites() {
+        log.info("Dashboard 站点列表");
         return Result.success(dashboardService.getSites());
     }
 
@@ -33,6 +38,7 @@ public class DashboardController {
             @RequestParam(required = false) String siteId,
             @RequestParam(defaultValue = "7") int days) {
         validateDays(days);
+        log.info("Dashboard 总览 siteId={} days={}", siteLabel(siteId), days);
         return Result.success(dashboardService.getStats(siteId, days));
     }
 
@@ -41,6 +47,7 @@ public class DashboardController {
             @RequestParam(required = false) String siteId,
             @RequestParam(defaultValue = "7") int days) {
         validateDays(days);
+        log.info("Dashboard 完单率 siteId={} days={}", siteLabel(siteId), days);
         return Result.success(dashboardService.getCompletionRate(siteId, days));
     }
 
@@ -49,6 +56,7 @@ public class DashboardController {
             @RequestParam(required = false) String siteId,
             @RequestParam(defaultValue = "7") int days) {
         validateDays(days);
+        log.info("Dashboard 结束原因 siteId={} days={}", siteLabel(siteId), days);
         return Result.success(dashboardService.getEndReasons(siteId, days));
     }
 
@@ -57,6 +65,7 @@ public class DashboardController {
             @RequestParam(required = false) String siteId,
             @RequestParam(defaultValue = "7") int days) {
         validateDays(days);
+        log.info("Dashboard 热力图 siteId={} days={}", siteLabel(siteId), days);
         return Result.success(dashboardService.getHeatmap(siteId, days));
     }
 
@@ -65,6 +74,7 @@ public class DashboardController {
             @RequestParam(required = false) String siteId,
             @RequestParam(defaultValue = "7") int days) {
         validateDays(days);
+        log.info("Dashboard 流程耗时 siteId={} days={}", siteLabel(siteId), days);
         return Result.success(dashboardService.getProcessTime(siteId, days));
     }
 
@@ -73,6 +83,7 @@ public class DashboardController {
             @RequestParam(required = false) String siteId,
             @RequestParam(defaultValue = "7") int days) {
         validateDays(days);
+        log.info("Dashboard 取消分析 siteId={} days={}", siteLabel(siteId), days);
         return Result.success(dashboardService.getCancelAnalysis(siteId, days));
     }
 
@@ -81,6 +92,7 @@ public class DashboardController {
             @RequestParam(required = false) String siteId,
             @RequestParam(defaultValue = "7") int days) {
         validateDays(days);
+        log.info("Dashboard 用户频次 siteId={} days={}", siteLabel(siteId), days);
         return Result.success(dashboardService.getUserFrequency(siteId, days));
     }
 
@@ -89,5 +101,9 @@ public class DashboardController {
             throw new IllegalArgumentException(
                     "days 参数超出范围，允许值为 " + MIN_DAYS + "~" + MAX_DAYS + "，当前值: " + days);
         }
+    }
+
+    private static String siteLabel(String siteId) {
+        return siteId == null || siteId.isEmpty() ? "(全部)" : siteId;
     }
 }
